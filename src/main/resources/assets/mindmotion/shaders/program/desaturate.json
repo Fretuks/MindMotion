@@ -54,6 +54,24 @@
       "values": [
         0.0
       ]
+    },
+    {
+      "name": "BlurAmount",
+      "type": "float",
+      "count": 1,
+      "values": [ 0.0 ]
+    },
+    {
+      "name": "Vignette",
+      "type": "float",
+      "count": 1,
+      "values": [ 0.0 ]
+    },
+    {
+      "name": "FogStrength",
+      "type": "float",
+      "count": 1,
+      "values": [ 0.0 ]
     }
   ]
 }

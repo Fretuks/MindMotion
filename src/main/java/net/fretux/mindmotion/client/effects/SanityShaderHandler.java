@@ -90,10 +90,32 @@ public class SanityShaderHandler {
             for (PostPass pass : getPasses(chain)) {
                 EffectInstance effect = pass.getEffect();
                 if (effect == null) continue;
-                var uniform = effect.getUniform("Desat");
-                if (uniform != null) {
-                    uniform.set(currentStrength);
+                var uDesat = effect.getUniform("Desat");
+                if (uDesat != null) uDesat.set(currentStrength);
+                float blur = 0f;
+                float vig = 0f;
+                float fog = 0f;
+
+                if (sanityPct < 0.5f) {
+                    blur = (0.5f - sanityPct) * 0.6f; 
+                    vig  = (0.5f - sanityPct) * 0.4f; 
+                    fog  = (0.5f - sanityPct) * 0.25f;
                 }
+                blur += insanityPct * 0.25f; 
+                vig  += insanityPct * 0.35f;   
+                fog  += insanityPct * 0.35f;   
+                blur = Math.min(blur, 1f);
+                vig = Math.min(vig, 1f);
+                fog = Math.min(fog, 1f);
+
+                var uBlur = effect.getUniform("BlurAmount");
+                if (uBlur != null) uBlur.set(blur);
+
+                var uVig = effect.getUniform("Vignette");
+                if (uVig != null) uVig.set(vig);
+
+                var uFog = effect.getUniform("FogStrength");
+                if (uFog != null) uFog.set(fog);
             }
         } catch (Exception e) {
             e.printStackTrace();

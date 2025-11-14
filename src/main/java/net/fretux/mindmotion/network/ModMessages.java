@@ -26,5 +26,10 @@ public class ModMessages {
                 .decoder(SyncStatsS2CPacket::decode)
                 .consumerMainThread(SyncStatsS2CPacket::handle)
                 .add();
+        CHANNEL.messageBuilder(SyncIdentityBlindS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SyncIdentityBlindS2CPacket::encode)
+                .decoder(SyncIdentityBlindS2CPacket::decode)
+                .consumerMainThread(SyncIdentityBlindS2CPacket::handle)
+                .add();
     }
 }
