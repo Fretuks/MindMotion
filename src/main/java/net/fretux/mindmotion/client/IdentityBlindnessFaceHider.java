@@ -1,6 +1,7 @@
 package net.fretux.mindmotion.client;
 
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -13,7 +14,8 @@ public class IdentityBlindnessFaceHider {
     public static void hideFaces(RenderLivingEvent.Pre<?, ?> event) {
         if (!ClientData.IDENTITY_BLIND) return;
         if (event.getRenderer().getModel() instanceof HumanoidModel<?> model) {
-            model.setAllVisible(false);
+            model.head.visible = false;
+            model.hat.visible = false;
         }
     }
 

@@ -83,9 +83,7 @@ public class SanityShaderHandler {
         }
 
         PostChain chain = mc.gameRenderer.currentEffect();
-        if (chain == null) return; // failed to load
-
-        // update the Desat uniform on all passes
+        if (chain == null) return;
         try {
             for (PostPass pass : getPasses(chain)) {
                 EffectInstance effect = pass.getEffect();
