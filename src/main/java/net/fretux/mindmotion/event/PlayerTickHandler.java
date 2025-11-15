@@ -1,7 +1,6 @@
 package net.fretux.mindmotion.event;
 
 import net.fretux.mindmotion.network.ModMessages;
-import net.fretux.mindmotion.network.SyncIdentityBlindS2CPacket;
 import net.fretux.mindmotion.network.SyncStatsS2CPacket;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
 import net.minecraft.server.level.ServerPlayer;
@@ -12,7 +11,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.NetworkDirection;
 
 import java.util.Map;
 import java.util.UUID;
@@ -25,15 +23,12 @@ public class PlayerTickHandler {
     private static final int TEMPO_TICK_INTERVAL = 15;
     private static final int COMBAT_DECAY_DELAY = 100;
     private static final Map<UUID, Integer> lastCombatTick = new ConcurrentHashMap<>();
-    private static final Map<UUID, Integer> identityBlindUntil = new ConcurrentHashMap<>();
-    private static final int IDENTITY_BLIND_DURATION = 30 * 20;
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Player player = event.player;
         if (player.level().isClientSide) return;
-        boolean blindActive = identityBlindUntil.getOrDefault(player.getUUID(), 0) > player.tickCount;
         int tick = player.tickCount;
         boolean sanityTick = tick % SANITY_TICK_INTERVAL == 0;
         boolean tempoTick = tick % TEMPO_TICK_INTERVAL == 0;
@@ -54,13 +49,6 @@ public class PlayerTickHandler {
                                     net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT
                             )
                     )
-            );
-        }
-        if (player instanceof ServerPlayer serverPlayer && (sanityTick || tempoTick)) {
-            ModMessages.CHANNEL.sendTo(
-                    new SyncIdentityBlindS2CPacket(blindActive),
-                    serverPlayer.connection.connection,
-                    NetworkDirection.PLAY_TO_CLIENT
             );
         }
     }
@@ -101,13 +89,13 @@ public class PlayerTickHandler {
                 sanity.setInsanity(Math.max(0, insanity - 0.15f));
             }
             float percent = (value / sanity.getMaxSanity()) * 100f;
-            if (percent <= 70 && percent > 50 && Math.random() < 0.03) {
+            if (percent <= 70 && Math.random() < 0.03) {
                 applyShiver(player);
             }
-            if (percent <= 30 && percent > 10 && Math.random() < 0.015) {
+            if (percent <= 50 && Math.random() < 0.015) {
                 applyPanic(player);
             }
-            if (percent <= 10 && percent > 0 && Math.random() < 0.02) {
+            if (percent <= 10 && Math.random() < 0.02) {
                 applyScratching(player);
             }
             float insanityPercent = (insanity / sanity.getMaxSanity()) * 100f;
@@ -138,10 +126,6 @@ public class PlayerTickHandler {
         lastCombatTick.put(player.getUUID(), player.tickCount);
     }
 
-    public static void triggerIdentityBlindness(Player player) {
-        identityBlindUntil.put(player.getUUID(), player.tickCount + IDENTITY_BLIND_DURATION);
-    }
-
     private static void applyShiver(Player player) {
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 0));
     }
@@ -150,13 +134,11 @@ public class PlayerTickHandler {
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 1));
         player.hurt(player.damageSources().magic(), 1f);
         applyShiver(player);
-        triggerIdentityBlindness(player);
     }
 
     private static void applyScratching(Player player) {
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 30, 1));
         player.hurt(player.damageSources().magic(), 2f);
         applyShiver(player);
-        triggerIdentityBlindness(player);
     }
 }
