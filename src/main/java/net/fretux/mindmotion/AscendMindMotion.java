@@ -1,11 +1,14 @@
 package net.fretux.mindmotion;
 
 import com.mojang.logging.LogUtils;
+import net.fretux.mindmotion.command.SanityCommand;
 import net.fretux.mindmotion.event.CombatEvents;
 import net.fretux.mindmotion.event.PlayerTickHandler;
 import net.fretux.mindmotion.network.ModMessages;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -19,6 +22,7 @@ public class AscendMindMotion {
     public AscendMindMotion() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
+        MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(PlayerTickHandler.class);
         MinecraftForge.EVENT_BUS.register(CombatEvents.class);
         LOGGER.info("Ascend: Mind and Motion initialized!");
@@ -26,5 +30,10 @@ public class AscendMindMotion {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         ModMessages.register();
+    }
+
+    @SubscribeEvent
+    public static void registerCommands(RegisterCommandsEvent event) {
+        SanityCommand.register(event.getDispatcher());
     }
 }

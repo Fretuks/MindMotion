@@ -93,15 +93,25 @@ public class SanityShaderHandler {
                 float blur = 0f;
                 float vig = 0f;
                 float fog = 0f;
-
+                float flash = 0f;
                 if (sanityPct < 0.5f) {
-                    blur = (0.5f - sanityPct) * 0.6f; 
-                    vig  = (0.5f - sanityPct) * 0.4f; 
-                    fog  = (0.5f - sanityPct) * 0.25f;
+                    blur = (0.5f - sanityPct) * 0.6f;
+                    vig = (0.5f - sanityPct) * 0.4f;
+                    fog = (0.5f - sanityPct) * 0.25f;
                 }
-                blur += insanityPct * 0.25f; 
-                vig  += insanityPct * 0.35f;   
-                fog  += insanityPct * 0.35f;   
+                if (insanityPct >= 0.8f) {
+                    float level = (insanityPct - 0.8f) / 0.2f;
+                    flash = 0.5f * level;
+                    if (mc.player.getRandom().nextFloat() < 0.01f) {
+                        flash += 0.4f;
+                    }
+                    flash = Math.min(flash, 1f);
+                }
+                var uFlash = effect.getUniform("FlashStrength");
+                if (uFlash != null) uFlash.set(flash);
+                blur += insanityPct * 0.25f;
+                vig += insanityPct * 0.35f;
+                fog += insanityPct * 0.35f;
                 blur = Math.min(blur, 1f);
                 vig = Math.min(vig, 1f);
                 fog = Math.min(fog, 1f);
@@ -114,6 +124,24 @@ public class SanityShaderHandler {
 
                 var uFog = effect.getUniform("FogStrength");
                 if (uFog != null) uFog.set(fog);
+                float shake = 0f;
+                float pulse = 0f;
+                if (sanityPct <= 0.125f) {
+                    float lowSan = (0.125f - sanityPct) / 0.125f;
+                    shake = lowSan * 0.010f;
+                    pulse = lowSan * 0.6f;
+                }
+                shake += insanityPct * 0.012f;
+                pulse += insanityPct * 0.8f;
+                shake = Math.min(shake, 0.025f);
+                pulse = Math.min(pulse, 1f);
+                var uShake = effect.getUniform("ShakeStrength");
+                if (uShake != null) uShake.set(shake);
+                var uPulse = effect.getUniform("PulseStrength");
+                if (uPulse != null) uPulse.set(pulse);
+                float time = (mc.level.getGameTime() % 200000) / 20f;
+                var uTime = effect.getUniform("Time");
+                if (uTime != null) uTime.set(time);
             }
         } catch (Exception e) {
             e.printStackTrace();

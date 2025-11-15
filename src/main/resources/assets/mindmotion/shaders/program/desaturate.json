@@ -72,6 +72,30 @@
       "type": "float",
       "count": 1,
       "values": [ 0.0 ]
+    },
+    {
+      "name": "ShakeStrength",
+      "type": "float",
+      "count": 1,
+      "values": [ 0.0 ]
+    },
+    {
+      "name": "PulseStrength",
+      "type": "float",
+      "count": 1,
+      "values": [ 0.0 ]
+    },
+    {
+      "name": "Time",
+      "type": "float",
+      "count": 1,
+      "values": [ 0.0 ]
+    },
+    {
+      "name": "FlashStrength",
+      "type": "float",
+      "count": 1,
+      "values": [ 0.0 ]
     }
   ]
 }

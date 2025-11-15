@@ -41,16 +41,10 @@ public class SanityTempoOverlay {
         int insanityFill = (int) (BAR_WIDTH * insanityPercent);
 
         RenderSystem.enableBlend();
-
-        // --- TEMPO BAR ---
         drawRoundedBar(gui, xTempo, y, BAR_WIDTH, BAR_HEIGHT, 0xFF33AFFF, tempoFill);
         gui.drawString(mc.font, Component.literal("Tempo"), xTempo, y - 10, 0x66CCFF, false);
-
-        // --- SANITY OR INSANITY BAR ---
         boolean insaneMode = sanity <= 0;
-
         if (!insaneMode) {
-            // Normal sanity bar
             drawRoundedBar(gui, xSanity, y, BAR_WIDTH, BAR_HEIGHT, 0xFFFFFFFF, sanityFill);
             gui.drawString(mc.font, Component.literal("Sanity"), xSanity + BAR_WIDTH - 30, y - 10, 0xFFFFFF, false);
         } else {
