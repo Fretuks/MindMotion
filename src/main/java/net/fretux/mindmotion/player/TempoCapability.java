@@ -5,13 +5,39 @@ public class TempoCapability implements ITempo {
     private final int maxTempo = 120;
 
     @Override
-    public int getTempo() { return tempo; }
+    public int getTempo() {
+        return tempo;
+    }
+
     @Override
-    public void setTempo(int tempo) { this.tempo = Math.max(0, Math.min(maxTempo, tempo)); }
+    public void setTempo(int tempo) {
+        this.tempo = Math.max(0, Math.min(maxTempo, tempo));
+    }
+
     @Override
-    public int getMaxTempo() { return maxTempo; }
+    public int getMaxTempo() {
+        return maxTempo;
+    }
+
     @Override
-    public void addTempo(int amount) { setTempo(this.tempo + amount); }
+    public void addTempo(int amount) {
+        setTempo(this.tempo + amount);
+    }
+
     @Override
-    public void reduceTempo(int amount) { setTempo(this.tempo - amount); }
+    public void reduceTempo(int amount) {
+        setTempo(this.tempo - amount);
+    }
+
+    private int ventCooldown = 0;
+
+    @Override
+    public int getVentCooldown() {
+        return ventCooldown;
+    }
+
+    @Override
+    public void setVentCooldown(int ticks) {
+        ventCooldown = ticks;
+    }
 }

@@ -43,6 +43,18 @@ public class SanityTempoOverlay {
         RenderSystem.enableBlend();
         drawRoundedBar(gui, xTempo, y, BAR_WIDTH, BAR_HEIGHT, 0xFF33AFFF, tempoFill);
         gui.drawString(mc.font, Component.literal("Tempo"), xTempo, y - 10, 0x66CCFF, false);
+        if (ClientData.VENT_COOLDOWN > 0) {
+            int seconds = ClientData.VENT_COOLDOWN / 20;
+            String ventText = "Vent: " + seconds + "s";
+            gui.drawString(
+                    mc.font,
+                    Component.literal(ventText),
+                    xTempo,
+                    y - 22,
+                    0x33AFFF,
+                    false
+            );
+        }
         boolean insaneMode = sanity <= 0;
         if (!insaneMode) {
             drawRoundedBar(gui, xSanity, y, BAR_WIDTH, BAR_HEIGHT, 0xFFFFFFFF, sanityFill);

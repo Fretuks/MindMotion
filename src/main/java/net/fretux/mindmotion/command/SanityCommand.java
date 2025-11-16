@@ -11,7 +11,7 @@ public class SanityCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("sanity")
-            .requires(source -> source.hasPermission(2)) // OP only
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("set")
                 .then(Commands.argument("sanity", FloatArgumentType.floatArg(0, 80))
                     .then(Commands.argument("insanity", FloatArgumentType.floatArg(0, 80))

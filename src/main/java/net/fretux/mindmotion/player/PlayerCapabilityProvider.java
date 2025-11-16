@@ -14,8 +14,10 @@ import javax.annotation.Nullable;
 
 @Mod.EventBusSubscriber(modid = "mindmotion")
 public class PlayerCapabilityProvider {
-    public static final Capability<ISanity> SANITY = CapabilityManager.get(new CapabilityToken<>(){});
-    public static final Capability<ITempo> TEMPO = CapabilityManager.get(new CapabilityToken<>(){});
+    public static final Capability<ISanity> SANITY = CapabilityManager.get(new CapabilityToken<>() {
+    });
+    public static final Capability<ITempo> TEMPO = CapabilityManager.get(new CapabilityToken<>() {
+    });
 
     @SubscribeEvent
     public static void attachCapabilities(AttachCapabilitiesEvent<?> event) {
@@ -64,12 +66,14 @@ public class PlayerCapabilityProvider {
         public CompoundTag serializeNBT() {
             CompoundTag tag = new CompoundTag();
             tag.putInt("Tempo", instance.getTempo());
+            tag.putInt("VentCooldown", instance.getVentCooldown());
             return tag;
         }
 
         @Override
         public void deserializeNBT(CompoundTag nbt) {
             instance.setTempo(nbt.getInt("Tempo"));
+            instance.setVentCooldown(nbt.getInt("VentCooldown"));
         }
     }
 }

@@ -1,6 +1,7 @@
 package net.fretux.mindmotion.client.effects;
 
 import net.fretux.mindmotion.client.ClientData;
+import net.fretux.mindmotion.client.shader.VentShaderHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.PostPass;
@@ -22,8 +23,6 @@ public class SanityShaderHandler {
             new ResourceLocation("mindmotion", "shaders/post/desaturate.json");
 
     private static float currentStrength = 0f;
-
-    // cache reflection so we don't look it up every frame
     private static Field passesField;
 
     private static List<PostPass> getPasses(PostChain chain) throws IllegalAccessException, NoSuchFieldException {
@@ -38,7 +37,6 @@ public class SanityShaderHandler {
 
     @SubscribeEvent
     public static void onRenderWorld(RenderLevelStageEvent event) {
-        // AFTER_LEVEL is the point where the full world image is ready
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
 
         Minecraft mc = Minecraft.getInstance();
@@ -59,11 +57,7 @@ public class SanityShaderHandler {
         float insanityBoost = 0.75f * insanityPct;
         float target = Math.max(baseDesat, insanityBoost);
         if (sanity <= 0f) target = 1f;
-
-        // smooth to avoid popping
         currentStrength += (target - currentStrength) * 0.08f;
-
-        // if essentially zero, shut the effect off completely
         if (currentStrength < 0.005f) {
             if (mc.gameRenderer.currentEffect() != null) {
                 mc.gameRenderer.shutdownEffect();
@@ -71,8 +65,6 @@ public class SanityShaderHandler {
             currentStrength = 0f;
             return;
         }
-
-        // ensure our effect is loaded
         if (mc.gameRenderer.currentEffect() == null) {
             try {
                 mc.gameRenderer.loadEffect(DESAT_EFFECT);
@@ -142,6 +134,14 @@ public class SanityShaderHandler {
                 float time = (mc.level.getGameTime() % 200000) / 20f;
                 var uTime = effect.getUniform("Time");
                 if (uTime != null) uTime.set(time);
+                if (VentShaderHandler.isActive()) {
+                    float strength = VentShaderHandler.getStrength();
+                    var uShock = effect.getUniform("ShockwaveStrength");
+                    if (uShock != null) uShock.set(strength);
+                } else {
+                    var uShock = effect.getUniform("ShockwaveStrength");
+                    if (uShock != null) uShock.set(0f);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

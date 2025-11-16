@@ -26,5 +26,15 @@ public class ModMessages {
                 .decoder(SyncStatsS2CPacket::decode)
                 .consumerMainThread(SyncStatsS2CPacket::handle)
                 .add();
+        CHANNEL.messageBuilder(VentPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .decoder(VentPacket::new)
+                .encoder(VentPacket::toBytes)
+                .consumerMainThread(VentPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(VentClientEffectPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(VentClientEffectPacket::new)
+                .encoder(VentClientEffectPacket::toBytes)
+                .consumerMainThread(VentClientEffectPacket::handle)
+                .add();
     }
 }

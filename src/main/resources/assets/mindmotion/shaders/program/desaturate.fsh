@@ -8,6 +8,7 @@ uniform float FogStrength;
 uniform float PulseStrength;
 uniform float Time;
 uniform float FlashStrength;
+uniform float ShockwaveStrength;
 
 in vec2 texCoord;
 in vec2 oneTexel;

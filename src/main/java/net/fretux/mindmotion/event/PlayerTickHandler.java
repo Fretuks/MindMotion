@@ -34,19 +34,18 @@ public class PlayerTickHandler {
         if (player.level().isClientSide) return;
         int tick = player.tickCount;
         boolean sanityTick = tick % SANITY_TICK_INTERVAL == 0;
-        boolean tempoTick = tick % TEMPO_TICK_INTERVAL == 0;
-
+        boolean tempoSyncTick = tick % TEMPO_TICK_INTERVAL == 0;
         if (sanityTick) handleSanityAndInsanity(player);
-        if (tempoTick) handleTempoTick(player, tick);
-
-        if (player instanceof ServerPlayer serverPlayer && (sanityTick || tempoTick)) {
+        handleTempoTick(player, tick);
+        if (player instanceof ServerPlayer serverPlayer && (sanityTick || tempoSyncTick)) {
             player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity ->
                     player.getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(tempo ->
                             ModMessages.CHANNEL.sendTo(
                                     new SyncStatsS2CPacket(
                                             sanity.getSanity(),
                                             sanity.getInsanity(),
-                                            tempo.getTempo()
+                                            tempo.getTempo(),
+                                            tempo.getVentCooldown()
                                     ),
                                     serverPlayer.connection.connection,
                                     net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT
@@ -185,12 +184,17 @@ public class PlayerTickHandler {
 
     private static void handleTempoTick(Player player, int currentTick) {
         player.getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(tempo -> {
-            int value = tempo.getTempo();
-            int lastCombat = lastCombatTick.getOrDefault(player.getUUID(), -10000);
-            int ticksSinceCombat = currentTick - lastCombat;
-
-            if (ticksSinceCombat > COMBAT_DECAY_DELAY && value > 0) {
-                tempo.setTempo(value - 1);
+            int cd = tempo.getVentCooldown();
+            if (cd > 0) {
+                tempo.setVentCooldown(cd - 1);
+            }
+            if (currentTick % TEMPO_TICK_INTERVAL == 0) {
+                int value = tempo.getTempo();
+                int lastCombat = lastCombatTick.getOrDefault(player.getUUID(), -10000);
+                int ticksSinceCombat = currentTick - lastCombat;
+                if (ticksSinceCombat > COMBAT_DECAY_DELAY && value > 0) {
+                    tempo.setTempo(value - 1);
+                }
             }
         });
     }
