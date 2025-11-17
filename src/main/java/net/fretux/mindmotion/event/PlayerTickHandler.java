@@ -1,5 +1,6 @@
 package net.fretux.mindmotion.event;
 
+import net.fretux.mindmotion.compat.AscendCompat;
 import net.fretux.mindmotion.network.ModMessages;
 import net.fretux.mindmotion.network.SyncStatsS2CPacket;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
@@ -17,6 +18,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static net.fretux.mindmotion.client.effects.IronsSpellbooksCompatMM.applyTempoToManaRegen;
+
 @Mod.EventBusSubscriber(modid = "mindmotion")
 public class PlayerTickHandler {
 
@@ -32,11 +35,14 @@ public class PlayerTickHandler {
         if (event.phase != TickEvent.Phase.END) return;
         Player player = event.player;
         if (player.level().isClientSide) return;
+        AscendCompat.applyWillpowerBonuses(player);
         int tick = player.tickCount;
         boolean sanityTick = tick % SANITY_TICK_INTERVAL == 0;
         boolean tempoSyncTick = tick % TEMPO_TICK_INTERVAL == 0;
+
         if (sanityTick) handleSanityAndInsanity(player);
         handleTempoTick(player, tick);
+
         if (player instanceof ServerPlayer serverPlayer && (sanityTick || tempoSyncTick)) {
             player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity ->
                     player.getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(tempo ->
@@ -45,7 +51,9 @@ public class PlayerTickHandler {
                                             sanity.getSanity(),
                                             sanity.getInsanity(),
                                             tempo.getTempo(),
-                                            tempo.getVentCooldown()
+                                            tempo.getVentCooldown(),
+                                            sanity.getMaxSanity(),
+                                            tempo.getMaxTempo()
                                     ),
                                     serverPlayer.connection.connection,
                                     net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT
@@ -195,6 +203,7 @@ public class PlayerTickHandler {
                 if (ticksSinceCombat > COMBAT_DECAY_DELAY && value > 0) {
                     tempo.setTempo(value - 1);
                 }
+                applyTempoToManaRegen(player, tempo.getTempo());
             }
         });
     }

@@ -38,22 +38,17 @@ public class SanityShaderHandler {
     @SubscribeEvent
     public static void onRenderWorld(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
-
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
-
         float sanity = ClientData.SANITY;
         float insanity = ClientData.INSANITY;
-        float maxSanity = 80f;
-
+        float maxSanity = ClientData.MAX_SANITY;
         float sanityPct = sanity / maxSanity;
         float insanityPct = insanity / maxSanity;
-
         float baseDesat = 0f;
         if (sanityPct < 0.70f) {
             baseDesat = 1f - (sanityPct / 0.70f);
         }
-
         float insanityBoost = 0.75f * insanityPct;
         float target = Math.max(baseDesat, insanityBoost);
         if (sanity <= 0f) target = 1f;
@@ -73,7 +68,6 @@ public class SanityShaderHandler {
                 return;
             }
         }
-
         PostChain chain = mc.gameRenderer.currentEffect();
         if (chain == null) return;
         try {
@@ -107,13 +101,10 @@ public class SanityShaderHandler {
                 blur = Math.min(blur, 1f);
                 vig = Math.min(vig, 1f);
                 fog = Math.min(fog, 1f);
-
                 var uBlur = effect.getUniform("BlurAmount");
                 if (uBlur != null) uBlur.set(blur);
-
                 var uVig = effect.getUniform("Vignette");
                 if (uVig != null) uVig.set(vig);
-
                 var uFog = effect.getUniform("FogStrength");
                 if (uFog != null) uFog.set(fog);
                 float shake = 0f;
@@ -151,10 +142,8 @@ public class SanityShaderHandler {
     @SubscribeEvent
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (!event.getEntity().level().isClientSide()) return;
-
         Minecraft mc = Minecraft.getInstance();
         currentStrength = 0f;
-
         mc.execute(() -> {
             if (mc.gameRenderer.currentEffect() != null) {
                 mc.gameRenderer.shutdownEffect();

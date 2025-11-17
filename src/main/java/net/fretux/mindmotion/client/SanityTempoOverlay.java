@@ -19,27 +19,21 @@ public class SanityTempoOverlay {
     public static void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui) return;
-
         GuiGraphics gui = event.getGuiGraphics();
         int width = event.getWindow().getGuiScaledWidth();
         int height = event.getWindow().getGuiScaledHeight();
-
         int y = height - 48;
         int xTempo = 8;
         int xSanity = width - BAR_WIDTH - 8;
-
         float sanity = ClientData.SANITY;
         float insanity = ClientData.INSANITY;
         float tempo = ClientData.TEMPO;
-
-        float sanityPercent = sanity / 80f;
-        float insanityPercent = insanity / 80f;    // same max as sanity (80)
-        float tempoPercent = tempo / 120f;
-
+        float sanityPercent = sanity / ClientData.MAX_SANITY;
+        float insanityPercent = insanity / ClientData.MAX_SANITY;
+        float tempoPercent = (float) tempo / (float) ClientData.MAX_TEMPO;
         int sanityFill = (int) (BAR_WIDTH * sanityPercent);
         int tempoFill = (int) (BAR_WIDTH * tempoPercent);
         int insanityFill = (int) (BAR_WIDTH * insanityPercent);
-
         RenderSystem.enableBlend();
         drawRoundedBar(gui, xTempo, y, BAR_WIDTH, BAR_HEIGHT, 0xFF33AFFF, tempoFill);
         gui.drawString(mc.font, Component.literal("Tempo"), xTempo, y - 10, 0x66CCFF, false);
