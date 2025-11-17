@@ -3,10 +3,8 @@ package net.fretux.mindmotion.player;
 public class SanityCapability implements ISanity {
     private float sanity = 80f;
     private float insanity = 0f;
-
-    // Base + bonus so Ascend can modify max
     private float baseMaxSanity = 80f;
-    private float bonusMaxSanity = 0f; // from Ascend willpower etc.
+    private float bonusMaxSanity = 0f;
 
     @Override
     public float getSanity() {
