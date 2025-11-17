@@ -4,7 +4,7 @@ public class TempoCapability implements ITempo {
     private int tempo = 0;
 
     private int baseMaxTempo = 120;
-    private float bonusMaxTempo = 0f; // from Ascend willpower
+    private float bonusMaxTempo = 0f;
 
     private int ventCooldown = 0;
 
