@@ -49,8 +49,14 @@ public class TempoCapability implements ITempo {
     }
 
     public void setBonusMaxTempo(float bonusMaxTempo) {
+        int oldMax = getMaxTempo();
         this.bonusMaxTempo = Math.max(0f, bonusMaxTempo);
-        setTempo(this.tempo);
+        int newMax = getMaxTempo();
+        if (oldMax > 0) {
+            float pct = (float) tempo / (float) oldMax;
+            tempo = Math.round(pct * newMax);
+        }
+        setTempo(tempo);
     }
 
     public float getBonusMaxTempo() {
