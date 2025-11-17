@@ -1,5 +1,6 @@
 package net.fretux.mindmotion.client.effects;
 
+import net.fretux.mindmotion.ConfigMM;
 import net.fretux.mindmotion.client.ClientData;
 import net.fretux.mindmotion.client.shader.VentShaderHandler;
 import net.minecraft.client.Minecraft;
@@ -37,8 +38,15 @@ public class SanityShaderHandler {
 
     @SubscribeEvent
     public static void onRenderWorld(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
         Minecraft mc = Minecraft.getInstance();
+        if (ConfigMM.CLIENT.DISABLE_SHADERS.get()) {
+            if (mc.gameRenderer.currentEffect() != null)
+                mc.gameRenderer.shutdownEffect();
+            return;
+        }
+        float flashMultiplier = ConfigMM.CLIENT.FLASH_STRENGTH_MULTIPLIER.get().floatValue();
+        float desatMultiplier = ConfigMM.CLIENT.SANITY_DESAT_MULTIPLIER.get().floatValue();
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
         if (mc.player == null || mc.level == null) return;
         float sanity = ClientData.SANITY;
         float insanity = ClientData.INSANITY;
@@ -75,7 +83,7 @@ public class SanityShaderHandler {
                 EffectInstance effect = pass.getEffect();
                 if (effect == null) continue;
                 var uDesat = effect.getUniform("Desat");
-                if (uDesat != null) uDesat.set(currentStrength);
+                if (uDesat != null) uDesat.set(currentStrength * desatMultiplier);
                 float blur = 0f;
                 float vig = 0f;
                 float fog = 0f;
@@ -94,6 +102,7 @@ public class SanityShaderHandler {
                     flash = Math.min(flash, 1f);
                 }
                 var uFlash = effect.getUniform("FlashStrength");
+                flash *= flashMultiplier;
                 if (uFlash != null) uFlash.set(flash);
                 blur += insanityPct * 0.25f;
                 vig += insanityPct * 0.35f;

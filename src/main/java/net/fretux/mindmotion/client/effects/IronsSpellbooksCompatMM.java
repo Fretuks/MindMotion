@@ -1,6 +1,7 @@
 package net.fretux.mindmotion.client.effects;
 
 import io.redspace.ironsspellbooks.api.registry.AttributeRegistry;
+import net.fretux.mindmotion.ConfigMM;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -11,7 +12,10 @@ import net.minecraftforge.fml.ModList;
 import java.util.UUID;
 
 public final class IronsSpellbooksCompatMM {
-    public static final double TEMPO_PER_PERCENT = 3;
+    public static int getTempoPerPercent() {
+        return ConfigMM.COMMON.TEMPO_PER_MANA_REGEN_PERCENT.get();
+    }
+    
     private static final UUID TEMPO_MANA_REGEN_UUID =
             UUID.fromString("de4f16ad-73b3-4b99-bf77-44c9878222aa");
 
@@ -37,7 +41,7 @@ public final class IronsSpellbooksCompatMM {
         if (tempo <= 0) {
             return;
         }
-        double bonusPercent = (double) tempo / TEMPO_PER_PERCENT;
+        double bonusPercent = (double) tempo / getTempoPerPercent();
         double multiplier = bonusPercent / 100.0;
         inst.addTransientModifier(new AttributeModifier(
                 TEMPO_MANA_REGEN_UUID,

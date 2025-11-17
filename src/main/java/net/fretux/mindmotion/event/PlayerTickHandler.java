@@ -1,5 +1,6 @@
 package net.fretux.mindmotion.event;
 
+import net.fretux.mindmotion.ConfigMM;
 import net.fretux.mindmotion.compat.AscendCompat;
 import net.fretux.mindmotion.network.ModMessages;
 import net.fretux.mindmotion.network.SyncStatsS2CPacket;
@@ -25,7 +26,6 @@ public class PlayerTickHandler {
 
     private static final int SANITY_TICK_INTERVAL = 20;
     private static final int TEMPO_TICK_INTERVAL = 15;
-    private static final int COMBAT_DECAY_DELAY = 100;
     private static final Map<UUID, Integer> lastCombatTick = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> insanityDamageTicks = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> lowSanitySoundCooldown = new ConcurrentHashMap<>();
@@ -77,7 +77,7 @@ public class PlayerTickHandler {
             boolean sleeping = player.isSleeping();
             boolean inLight = player.level().getMaxLocalRawBrightness(player.blockPosition()) > 12;
             boolean nearTorch = player.level().getBlockState(player.blockPosition().above()).is(Blocks.TORCH);
-            if (inDark) delta -= 0.02f;
+            if (inDark) delta -= ConfigMM.COMMON.BASE_SANITY_DECAY_DARK.get().floatValue();
             if (inRain) delta -= 0.04f;
             if (isHungry) delta -= 0.06f;
             if (nearLava) delta -= 0.05f;
@@ -108,7 +108,7 @@ public class PlayerTickHandler {
                     e -> e instanceof net.minecraft.world.entity.Mob && !(e instanceof net.minecraft.world.entity.animal.Animal)
             ).size();
             delta -= hostileCount * 0.005f;
-            if (inLight) delta += 0.03f;
+            if (inLight) delta += ConfigMM.COMMON.BASE_SANITY_REGEN_LIGHT.get().floatValue();
             if (nearTorch) delta += 0.05f;
             if (sleeping) delta += 0.25f;
             if (player.getUseItem() != null && player.getUseItem().isEdible()) delta += 0.05f;
@@ -161,22 +161,22 @@ public class PlayerTickHandler {
             if (percent <= 70 && Math.random() < 0.03) {
                 applyShiver(player);
             }
-            if (percent <= 50 && Math.random() < 0.015) {
-                applyPanic(player);
-            }
-            if (percent <= 10 && Math.random() < 0.02) {
+            if (percent <= 10 && Math.random() < ConfigMM.COMMON.SCRATCHING_CHANCE.get()) {
                 applyScratching(player);
+            }
+            if (percent <= 50 && Math.random() < ConfigMM.COMMON.PANIC_CHANCE.get()) {
+                applyPanic(player);
             }
             float insanityPercent = (insanity / sanity.getMaxSanity()) * 100f;
             if (insanityPercent > 0) {
-                if (insanityPercent > 60 && Math.random() < 0.02) {
+                if (insanityPercent > 60 && Math.random() < ConfigMM.COMMON.PANIC_CHANCE.get()) {
                     applyPanic(player);
                 }
-                if (insanityPercent > 90 && Math.random() < 0.05) {
+                if (insanityPercent > 90 && Math.random() < ConfigMM.COMMON.SCRATCHING_CHANCE.get()) {
                     applyScratching(player);
                 }
             }
-            if (percent <= 30f) {
+            if (ConfigMM.COMMON.ENABLE_LOW_SANITY_SOUNDS.get() && percent <= 30f) {
                 UUID id = player.getUUID();
                 int cd = lowSanitySoundCooldown.getOrDefault(id, 0) - SANITY_TICK_INTERVAL;
                 if (cd <= 0) {
@@ -200,7 +200,7 @@ public class PlayerTickHandler {
                 int value = tempo.getTempo();
                 int lastCombat = lastCombatTick.getOrDefault(player.getUUID(), -10000);
                 int ticksSinceCombat = currentTick - lastCombat;
-                if (ticksSinceCombat > COMBAT_DECAY_DELAY && value > 0) {
+                if (ticksSinceCombat > ConfigMM.COMMON.TEMPO_DECAY_DELAY.get()) {
                     tempo.setTempo(value - 1);
                 }
                 applyTempoToManaRegen(player, tempo.getTempo());

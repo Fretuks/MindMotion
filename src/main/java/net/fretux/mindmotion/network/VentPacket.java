@@ -1,5 +1,6 @@
 package net.fretux.mindmotion.network;
 
+import net.fretux.mindmotion.ConfigMM;
 import net.fretux.mindmotion.event.VentHandler;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,10 +23,11 @@ public class VentPacket {
         ctx.get().enqueueWork(() -> {
             ServerPlayer player = ctx.get().getSender();
             if (player == null) return;
+            int ventCost = ConfigMM.COMMON.VENT_COST.get();
             player.getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(tempo -> {
-                if (tempo.getTempo() < 40) return;
+                if (tempo.getTempo() < ventCost) return;
                 if (tempo.getVentCooldown() > 0) return;
-                tempo.setTempo(tempo.getTempo() - 40);
+                tempo.setTempo(tempo.getTempo() - ConfigMM.COMMON.VENT_COST.get());
                 tempo.setVentCooldown(20 * 15);
                 VentHandler.performVent(player);
                 player.level().playSound(
