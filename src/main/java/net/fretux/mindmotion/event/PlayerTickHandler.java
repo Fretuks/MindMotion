@@ -140,21 +140,33 @@ public class PlayerTickHandler {
             }
             if (player.isSleepingLongEnough())
                 delta += 0.10f;
-            sanity.setSanity(value + delta);
-            if (sanity.getSanity() > 0) {
-                sanity.setInsanity(Math.max(0, insanity - 0.15f));
-                insanityDamageTicks.remove(player.getUUID());
-            } else {
-                sanity.setInsanity(Math.min(sanity.getMaxSanity(), insanity + 0.3f));
-                if (sanity.getInsanity() >= sanity.getMaxSanity()) {
+            boolean isInsane = insanity > 0;
+            if (isInsane) {
+                if (value + delta <= 0 && delta < 0) {
+                    sanity.setInsanity(Math.min(sanity.getMaxSanity(), insanity + Math.abs(delta)));
+                    insanity = sanity.getInsanity();
+                }
+                if (delta > 0) {
+                    float insanityReduction = delta * 1.0f;
+                    sanity.setInsanity(Math.max(0, insanity - insanityReduction));
+                    insanity = sanity.getInsanity();
+                } else {
+                    sanity.setSanity(value + delta);
+                }
+                if (sanity.getSanity() <= 0 && sanity.getInsanity() >= sanity.getMaxSanity()) {
                     UUID id = player.getUUID();
                     int ticks = insanityDamageTicks.getOrDefault(id, 0) + SANITY_TICK_INTERVAL;
                     insanityDamageTicks.put(id, ticks);
-
                     float damage = 1.0f + (ticks / 100f);
                     player.hurt(player.damageSources().magic(), damage);
                     player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
                     return;
+                }
+            } else {
+                sanity.setSanity(value + delta);
+                if (sanity.getSanity() > 0) {
+                    sanity.setInsanity(Math.max(0, insanity - 0.15f));
+                    insanityDamageTicks.remove(player.getUUID());
                 }
             }
             float percent = (value / sanity.getMaxSanity()) * 100f;
