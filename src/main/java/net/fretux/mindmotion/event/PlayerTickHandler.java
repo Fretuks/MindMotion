@@ -142,18 +142,23 @@ public class PlayerTickHandler {
                 delta += 0.10f;
             boolean isInsane = insanity > 0;
             if (isInsane) {
-                if (value + delta <= 0 && delta < 0) {
-                    sanity.setInsanity(Math.min(sanity.getMaxSanity(), insanity + Math.abs(delta)));
-                    insanity = sanity.getInsanity();
-                }
                 if (delta > 0) {
-                    float insanityReduction = delta * 1.0f;
-                    sanity.setInsanity(Math.max(0, insanity - insanityReduction));
+                    sanity.setInsanity(Math.max(0, insanity - delta));
                     insanity = sanity.getInsanity();
-                } else {
-                    sanity.setSanity(value + delta);
+                    if (insanity <= 0) {
+                        sanity.setSanity(Math.min(sanity.getMaxSanity(), value + delta));
+                    }
+                    return;
                 }
-                if (sanity.getSanity() <= 0 && sanity.getInsanity() >= sanity.getMaxSanity()) {
+                sanity.setSanity(value + delta);
+                value = sanity.getSanity();
+                if (value <= 0 && delta < 0) {
+                    float overflow = Math.abs(value);
+                    sanity.setSanity(0);
+                    sanity.setInsanity(Math.min(sanity.getMaxSanity(), insanity + overflow));
+                }
+                insanity = sanity.getInsanity();
+                if (sanity.getSanity() <= 0 && insanity >= sanity.getMaxSanity()) {
                     UUID id = player.getUUID();
                     int ticks = insanityDamageTicks.getOrDefault(id, 0) + SANITY_TICK_INTERVAL;
                     insanityDamageTicks.put(id, ticks);
@@ -162,7 +167,7 @@ public class PlayerTickHandler {
                     player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
                     return;
                 }
-            } else {
+        } else {
                 sanity.setSanity(value + delta);
                 if (sanity.getSanity() > 0) {
                     sanity.setInsanity(Math.max(0, insanity - 0.15f));
