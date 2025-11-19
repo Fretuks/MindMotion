@@ -96,6 +96,12 @@
       "type": "float",
       "count": 1,
       "values": [ 0.0 ]
+    },
+    {
+      "name": "ShockwaveStrength",
+      "type": "float",
+      "count": 1,
+      "values": [ 0.0 ]
     }
   ]
 }
