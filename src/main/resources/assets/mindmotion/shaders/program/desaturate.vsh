@@ -6,11 +6,12 @@ uniform mat4 ProjMat;
 uniform vec2 OutSize;
 uniform float ShakeStrength;
 uniform float Time;
+out vec2 oneTexel;
 
 out vec2 texCoord;
 
 void main() {
-
+    oneTexel = 1.0 / OutSize;
     // screen-shake offset in *pixels*
     float px = sin(Time * 25.0 + Position.x * 5.0) * ShakeStrength * 20.0;
     float py = cos(Time * 20.0 + Position.y * 7.0) * ShakeStrength * 20.0;
