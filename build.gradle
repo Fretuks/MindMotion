@@ -162,3 +162,7 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     dependsOn tasks.named("createSrgToMcp")
 }
+
+tasks.withType(ProcessResources).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
