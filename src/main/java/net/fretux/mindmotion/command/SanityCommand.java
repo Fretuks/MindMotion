@@ -6,6 +6,8 @@ import net.fretux.mindmotion.player.PlayerCapabilityProvider;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class SanityCommand {
 
@@ -37,5 +39,10 @@ public class SanityCommand {
                 )
             )
         );
+    }
+
+    @SubscribeEvent
+    public static void registerCommands(RegisterCommandsEvent event) {
+        SanityCommand.register(event.getDispatcher());
     }
 }

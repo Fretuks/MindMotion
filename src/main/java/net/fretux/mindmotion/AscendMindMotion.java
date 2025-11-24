@@ -30,6 +30,7 @@ public class AscendMindMotion {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(PlayerTickHandler.class);
         MinecraftForge.EVENT_BUS.register(CombatEvents.class);
+        MinecraftForge.EVENT_BUS.register(SanityCommand.class);
         LOGGER.info("Ascend: Mind and Motion initialized!");
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigMM.CLIENT_SPEC);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigMM.COMMON_SPEC);
@@ -37,10 +38,5 @@ public class AscendMindMotion {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         ModMessages.register();
-    }
-
-    @SubscribeEvent
-    public static void registerCommands(RegisterCommandsEvent event) {
-        SanityCommand.register(event.getDispatcher());
     }
 }
