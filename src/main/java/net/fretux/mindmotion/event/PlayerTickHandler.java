@@ -150,12 +150,13 @@ public class PlayerTickHandler {
                     }
                     return;
                 }
-                sanity.setSanity(value + delta);
-                value = sanity.getSanity();
-                if (value <= 0 && delta < 0) {
-                    float overflow = Math.abs(value);
+                float newValue = value + delta;
+                if (newValue <= 0 && delta < 0) {
+                    float overflow = -newValue;
                     sanity.setSanity(0);
                     sanity.setInsanity(Math.min(sanity.getMaxSanity(), insanity + overflow));
+                } else {
+                    sanity.setSanity(newValue);
                 }
                 insanity = sanity.getInsanity();
                 if (sanity.getSanity() <= 0 && insanity >= sanity.getMaxSanity()) {
@@ -168,10 +169,17 @@ public class PlayerTickHandler {
                     return;
                 }
         } else {
-                sanity.setSanity(value + delta);
-                if (sanity.getSanity() > 0) {
+                float newValueElse = value + delta;
+                if (newValueElse <= 0 && delta < 0) {
+                    float overflow = -newValueElse;
+                    sanity.setSanity(0);
+                    sanity.setInsanity(Math.min(sanity.getMaxSanity(), insanity + overflow));
+                    insanity = sanity.getInsanity();
+                } else if (newValueElse > 0) {
+                    sanity.setSanity(newValueElse);
                     sanity.setInsanity(Math.max(0, insanity - 0.15f));
                     insanityDamageTicks.remove(player.getUUID());
+                    insanity = sanity.getInsanity();
                 }
             }
             float percent = (value / sanity.getMaxSanity()) * 100f;

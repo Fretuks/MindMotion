@@ -62,7 +62,7 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
-    mavenLocal()  // REQUIRED for local Ascend mod
+    mavenLocal()
     mavenCentral()
 
     maven {
@@ -86,9 +86,7 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-    // Local Ascend mod (works because of mavenLocal())
-    implementation fg.deobf("net.fretux.ascend:Ascend:2.0.2")
+    implementation fg.deobf("net.fretux.ascend:Ascend:2.0.3")
 
     // Iron's Spellbooks
     compileOnly fg.deobf("io.redspace.ironsspellbooks:irons_spellbooks:${irons_spells_version}:api")
