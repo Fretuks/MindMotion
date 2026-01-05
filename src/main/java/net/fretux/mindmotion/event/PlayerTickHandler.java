@@ -1,7 +1,6 @@
 package net.fretux.mindmotion.event;
 
 import net.fretux.mindmotion.ConfigMM;
-import net.fretux.mindmotion.compat.AscendCompat;
 import net.fretux.mindmotion.network.ModMessages;
 import net.fretux.mindmotion.network.SyncStatsS2CPacket;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
@@ -14,6 +13,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.ModList;
 
 import java.util.Map;
 import java.util.UUID;
@@ -35,7 +35,13 @@ public class PlayerTickHandler {
         if (event.phase != TickEvent.Phase.END) return;
         Player player = event.player;
         if (player.level().isClientSide) return;
-        AscendCompat.applyWillpowerBonuses(player);
+        if (ModList.get().isLoaded("ascend")) {
+            try {
+                net.fretux.mindmotion.compat.AscendCompat.applyWillpowerBonuses(player);
+            } catch (NoClassDefFoundError | Exception e) {
+                // Skip Ascend integration if the classes are missing or fail to load.
+            }
+        }
         int tick = player.tickCount;
         boolean sanityTick = tick % SANITY_TICK_INTERVAL == 0;
         boolean tempoSyncTick = tick % TEMPO_TICK_INTERVAL == 0;
