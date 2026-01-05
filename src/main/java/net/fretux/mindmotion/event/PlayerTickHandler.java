@@ -14,6 +14,8 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.ModList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.UUID;
@@ -29,6 +31,7 @@ public class PlayerTickHandler {
     private static final Map<UUID, Integer> lastCombatTick = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> insanityDamageTicks = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> lowSanitySoundCooldown = new ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(PlayerTickHandler.class);
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -39,7 +42,7 @@ public class PlayerTickHandler {
             try {
                 net.fretux.mindmotion.compat.AscendCompat.applyWillpowerBonuses(player);
             } catch (NoClassDefFoundError | Exception e) {
-                // Skip Ascend integration if the classes are missing or fail to load.
+                log.error(String.valueOf(e));
             }
         }
         int tick = player.tickCount;
