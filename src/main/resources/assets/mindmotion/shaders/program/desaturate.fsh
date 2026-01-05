@@ -15,26 +15,47 @@ in vec2 oneTexel;
 
 out vec4 fragColor;
 
-vec4 sampleBlur() {
-    if (BlurAmount <= 0.001) return texture(DiffuseSampler, texCoord);
+vec2 applyShockwave(vec2 uv) {
+    if (ShockwaveStrength <= 0.001) return uv;
+
+    vec2 center = vec2(0.5);
+    vec2 dir = uv - center;
+    float dist = length(dir);
+
+    // outwards pulse that quickly fades after the shockwave passes
+    float wave = sin((dist - Time * 1.75) * 32.0) * 0.012 * ShockwaveStrength;
+    float falloff = smoothstep(0.05, 0.35, dist) * (1.0 - smoothstep(0.35, 0.9, dist));
+    wave *= falloff;
+
+    if (dist > 0.0001) {
+        dir = normalize(dir);
+    }
+
+    return uv + dir * wave;
+}
+
+vec4 sampleBlur(vec2 uv) {
+    if (BlurAmount <= 0.001) return texture(DiffuseSampler, uv);
 
     float w = BlurAmount * 0.5;
 
     vec4 sum = vec4(0.0);
-    sum += texture(DiffuseSampler, texCoord + oneTexel * vec2(-1, 0)) * w;
-    sum += texture(DiffuseSampler, texCoord + oneTexel * vec2( 1, 0)) * w;
-    sum += texture(DiffuseSampler, texCoord + oneTexel * vec2( 0,-1)) * w;
-    sum += texture(DiffuseSampler, texCoord + oneTexel * vec2( 0, 1)) * w;
+    sum += texture(DiffuseSampler, uv + oneTexel * vec2(-1, 0)) * w;
+    sum += texture(DiffuseSampler, uv + oneTexel * vec2( 1, 0)) * w;
+    sum += texture(DiffuseSampler, uv + oneTexel * vec2( 0,-1)) * w;
+    sum += texture(DiffuseSampler, uv + oneTexel * vec2( 0, 1)) * w;
 
-    vec4 center = texture(DiffuseSampler, texCoord) * (1.0 - w * 4.0);
+    vec4 center = texture(DiffuseSampler, uv) * (1.0 - w * 4.0);
     return center + sum;
 }
 
 void main() {
-    vec4 col = texture(DiffuseSampler, texCoord);
+    vec2 shockUV = applyShockwave(texCoord);
+
+    vec4 col = texture(DiffuseSampler, shockUV);
 
     // Blur
-    vec4 blurred = sampleBlur();
+    vec4 blurred = sampleBlur(shockUV);
     col = mix(col, blurred, BlurAmount);
 
     // Grayscale
