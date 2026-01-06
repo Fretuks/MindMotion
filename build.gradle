@@ -1,8 +1,10 @@
 plugins {
+    id 'java'
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.spongepowered.mixin' version '0.7.+'
 }
 
 version = mod_version
@@ -26,11 +28,8 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-
-            // IMPORTANT: allow Mixin remapping
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-
+            property "mixin.env.remapRefMap", "true"
+            property "mixin.env.refMapRemappingFile", file("$buildDir/createSrgToMcp/output.srg").absolutePath
             mods {
                 "${mod_id}" {
                     source sourceSets.main
@@ -40,6 +39,9 @@ minecraft {
 
         client {
             property 'forge.enabledGameTestNamespaces', mod_id
+            property "mixin.debug.verbose", "true"
+            property "mixin.debug.export", "true"
+            property "mixin.dumpTargetOnFailure", "true"
         }
         server {
             property 'forge.enabledGameTestNamespaces', mod_id
@@ -87,11 +89,11 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly fg.deobf("net.fretux.ascend:Ascend:2.1.1")
-    implementation fg.deobf("net.fretux.ascend:Ascend:2.1.1")
-    
+    runtimeOnly fg.deobf("net.fretux.ascend:Ascend:2.1.1")
+
     // Iron's Spellbooks
     compileOnly fg.deobf("io.redspace.ironsspellbooks:irons_spellbooks:${irons_spells_version}:api")
-    implementation fg.deobf("io.redspace.ironsspellbooks:irons_spellbooks:${irons_spells_version}")
+    runtimeOnly fg.deobf("io.redspace.ironsspellbooks:irons_spellbooks:${irons_spells_version}")
 
     // GECKOLIB
     implementation fg.deobf("software.bernie.geckolib:geckolib-forge-${geckolib_version}")
@@ -106,22 +108,31 @@ dependencies {
     // Curios
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
     implementation fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+mixin {
+    add sourceSets.main, "mixins.mindmotion.refmap.json"
+    debug.verbose = true
+    debug.export = true
+    dumpTargetOnFailure = true
 }
 
 
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
-            minecraft_version       : minecraft_version,
-            minecraft_version_range : minecraft_version_range,
-            forge_version           : forge_version,
-            forge_version_range     : forge_version_range,
-            loader_version_range    : loader_version_range,
-            mod_id                  : mod_id,
-            mod_name                : mod_name,
-            mod_license             : mod_license,
-            mod_version             : mod_version,
-            mod_authors             : mod_authors,
-            mod_description         : mod_description,
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            forge_version          : forge_version,
+            forge_version_range    : forge_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description,
     ]
 
     inputs.properties replaceProperties

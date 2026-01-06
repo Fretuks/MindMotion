@@ -1,0 +1,10 @@
+﻿{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.fretux.mindmotion.mixin",
+  "refmap": "mixins.mindmotion.refmap.json",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "PostChainAccessor"
+  ]
+}
