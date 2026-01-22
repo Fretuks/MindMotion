@@ -60,6 +60,8 @@ public final class IronsSpellbooksCompatMM {
     }
 
     public static void applyTempoToManaRegen(Player player, int tempo) {
+        if (!isLoaded()) return;
+        resolveOnce();
         if (!available) return;
         Attribute manaRegenAttr = getManaRegenAttribute();
         if (manaRegenAttr == null) return;
