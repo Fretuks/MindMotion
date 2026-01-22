@@ -21,9 +21,9 @@ public class PlayerCapabilityProvider {
 
     @SubscribeEvent
     public static void attachCapabilities(AttachCapabilitiesEvent<?> event) {
-        if (event.getObject() instanceof net.minecraft.world.entity.player.Player player) {
-            event.addCapability(new ResourceLocation("mindmotion", "sanity"), new SanityProvider());
-            event.addCapability(new ResourceLocation("mindmotion", "tempo"), new TempoProvider());
+        if (event.getObject() instanceof net.minecraft.world.entity.player.Player) {
+            event.addCapability(ResourceLocation.fromNamespaceAndPath("mindmotion", "sanity"), new SanityProvider());
+            event.addCapability(ResourceLocation.fromNamespaceAndPath("mindmotion", "tempo"), new TempoProvider());
         }
     }
 

@@ -1,7 +1,6 @@
 package net.fretux.mindmotion.client.effects;
 
 import net.fretux.mindmotion.ConfigMM;
-import net.fretux.mindmotion.player.PlayerCapabilityProvider;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -30,18 +29,8 @@ public final class IronsSpellbooksCompatMM {
         return ConfigMM.COMMON.TEMPO_PER_MANA_REGEN_PERCENT.get();
     }
 
-    public static boolean isLoaded() {
-        return ModList.get().isLoaded(IRONS_MODID);
-    }
-
-    public static void applyTempo(Player player) {
-        if (!isLoaded()) return;
-        resolveOnce();
-        if (!available) return;
-        player.getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(tempoCap -> {
-            int tempo = tempoCap.getTempo();
-            applyTempoToManaRegen(player, tempo);
-        });
+    public static boolean isNotLoaded() {
+        return !ModList.get().isLoaded(IRONS_MODID);
     }
 
     private static void resolveOnce() {
@@ -60,7 +49,7 @@ public final class IronsSpellbooksCompatMM {
     }
 
     public static void applyTempoToManaRegen(Player player, int tempo) {
-        if (!isLoaded()) return;
+        if (isNotLoaded()) return;
         resolveOnce();
         if (!available) return;
         Attribute manaRegenAttr = getManaRegenAttribute();

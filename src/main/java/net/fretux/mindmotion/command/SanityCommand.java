@@ -21,7 +21,7 @@ public class SanityCommand {
                             ServerPlayer player = ctx.getSource().getPlayer();
                             float sanity = FloatArgumentType.getFloat(ctx, "sanity");
                             float insanity = FloatArgumentType.getFloat(ctx, "insanity");
-
+                            assert player != null;
                             player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(cap -> {
                                 cap.setSanity(sanity);
                                 cap.setInsanity(insanity);

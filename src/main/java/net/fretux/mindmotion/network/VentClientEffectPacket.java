@@ -14,13 +14,12 @@ public class VentClientEffectPacket {
 
     public void toBytes(FriendlyByteBuf buf) {}
 
-    public boolean handle(Supplier<NetworkEvent.Context> ctx) {
+    public void handle(Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) return;
             mc.player.swingTime = 10;
             VentShaderHandler.triggerVentShockwave();
         });
-        return true;
     }
 }
