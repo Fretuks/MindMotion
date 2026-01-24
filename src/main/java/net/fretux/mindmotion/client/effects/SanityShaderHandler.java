@@ -55,7 +55,6 @@ public class SanityShaderHandler {
         float desatMultiplier = ConfigMM.CLIENT.SANITY_DESAT_MULTIPLIER.get().floatValue();
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
         if (mc.player == null || mc.level == null) return;
-        LOGGER.debug("SanityShaderHandler tick stage={}", event.getStage());
         float sanity = ClientData.SANITY;
         float insanity = ClientData.INSANITY;
         float maxSanity = ClientData.MAX_SANITY;
