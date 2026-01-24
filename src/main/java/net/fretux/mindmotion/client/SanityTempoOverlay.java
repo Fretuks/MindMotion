@@ -1,6 +1,7 @@
 package net.fretux.mindmotion.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.fretux.mindmotion.ConfigMM;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -12,8 +13,8 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "mindmotion", value = Dist.CLIENT)
 public class SanityTempoOverlay {
 
-    private static final int BAR_WIDTH = 102;
-    private static final int BAR_HEIGHT = 9;
+    private static final int DEFAULT_LABEL_OFFSET = 10;
+    private static final int DEFAULT_VENT_OFFSET = 22;
 
     @SubscribeEvent
     public static void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
@@ -22,21 +23,29 @@ public class SanityTempoOverlay {
         GuiGraphics gui = event.getGuiGraphics();
         int width = event.getWindow().getGuiScaledWidth();
         int height = event.getWindow().getGuiScaledHeight();
-        int y = height - 48;
-        int xTempo = 8;
-        int xSanity = width - BAR_WIDTH - 8;
+        int barWidth = ConfigMM.CLIENT.BAR_WIDTH.get();
+        int barHeight = ConfigMM.CLIENT.BAR_HEIGHT.get();
+        int labelOffset = Math.max(DEFAULT_LABEL_OFFSET, barHeight + 1);
+        int ventOffset = Math.max(DEFAULT_VENT_OFFSET, labelOffset + 12);
+        int baseY = height - 48;
+        int baseTempoX = 8;
+        int baseSanityX = width - barWidth - 8;
+        int xTempo = baseTempoX + ConfigMM.CLIENT.TEMPO_BAR_X_OFFSET.get();
+        int yTempo = baseY + ConfigMM.CLIENT.TEMPO_BAR_Y_OFFSET.get();
+        int xSanity = baseSanityX + ConfigMM.CLIENT.SANITY_BAR_X_OFFSET.get();
+        int ySanity = baseY + ConfigMM.CLIENT.SANITY_BAR_Y_OFFSET.get();
         float sanity = ClientData.SANITY;
         float insanity = ClientData.INSANITY;
         float tempo = ClientData.TEMPO;
         float sanityPercent = sanity / ClientData.MAX_SANITY;
         float insanityPercent = insanity / ClientData.MAX_SANITY;
         float tempoPercent = (float) tempo / (float) ClientData.MAX_TEMPO;
-        int sanityFill = (int) (BAR_WIDTH * sanityPercent);
-        int tempoFill = (int) (BAR_WIDTH * tempoPercent);
-        int insanityFill = (int) (BAR_WIDTH * insanityPercent);
+        int sanityFill = (int) (barWidth * sanityPercent);
+        int tempoFill = (int) (barWidth * tempoPercent);
+        int insanityFill = (int) (barWidth * insanityPercent);
         RenderSystem.enableBlend();
-        drawRoundedBar(gui, xTempo, y, BAR_WIDTH, BAR_HEIGHT, 0xFF33AFFF, tempoFill);
-        gui.drawString(mc.font, Component.literal("Tempo"), xTempo, y - 10, 0x66CCFF, false);
+        drawRoundedBar(gui, xTempo, yTempo, barWidth, barHeight, 0xFF33AFFF, tempoFill);
+        gui.drawString(mc.font, Component.literal("Tempo"), xTempo, yTempo - labelOffset, 0x66CCFF, false);
         if (ClientData.VENT_COOLDOWN > 0) {
             int seconds = ClientData.VENT_COOLDOWN / 20;
             String ventText = "Vent: " + seconds + "s";
@@ -44,35 +53,39 @@ public class SanityTempoOverlay {
                     mc.font,
                     Component.literal(ventText),
                     xTempo,
-                    y - 22,
+                    yTempo - ventOffset,
                     0x33AFFF,
                     false
             );
         }
         boolean insaneMode = sanity <= 0;
         if (!insaneMode) {
-            drawRoundedBar(gui, xSanity, y, BAR_WIDTH, BAR_HEIGHT, 0xFFFFFFFF, sanityFill);
-            gui.drawString(mc.font, Component.literal("Sanity"), xSanity + BAR_WIDTH - 30, y - 10, 0xFFFFFF, false);
+            drawRoundedBar(gui, xSanity, ySanity, barWidth, barHeight, 0xFFFFFFFF, sanityFill);
+            int sanityLabelWidth = mc.font.width("Sanity");
+            int sanityLabelX = xSanity + barWidth - sanityLabelWidth;
+            gui.drawString(mc.font, Component.literal("Sanity"), sanityLabelX, ySanity - labelOffset, 0xFFFFFF, false);
         } else {
             int purple = 0xFFAA33FF;
             int darkPurple = 0xFF6611AA;
-            drawRoundedRect(gui, xSanity, y, BAR_WIDTH, BAR_HEIGHT, 0xDD000000);
-            drawRoundedRect(gui, xSanity, y, insanityFill, BAR_HEIGHT, purple, darkPurple);
-            gui.drawString(mc.font, Component.literal("Insanity"), xSanity + BAR_WIDTH - 42, y - 10, 0xCC66FF, false);
+            drawRoundedRect(gui, xSanity, ySanity, barWidth, barHeight, 0xDD000000);
+            drawRoundedRect(gui, xSanity, ySanity, insanityFill, barHeight, purple, darkPurple);
+            int insanityLabelWidth = mc.font.width("Insanity");
+            int insanityLabelX = xSanity + barWidth - insanityLabelWidth;
+            gui.drawString(mc.font, Component.literal("Insanity"), insanityLabelX, ySanity - labelOffset, 0xCC66FF, false);
         }
         double mouseX = mc.mouseHandler.xpos() * width / (double) event.getWindow().getScreenWidth();
         double mouseY = mc.mouseHandler.ypos() * height / (double) event.getWindow().getScreenHeight();
-        if (isMouseOver(mouseX, mouseY, xTempo, y, BAR_WIDTH, BAR_HEIGHT)) {
+        if (isMouseOver(mouseX, mouseY, xTempo, yTempo, barWidth, barHeight)) {
             String text = String.format("%.0f%%", tempoPercent * 100f);
-            gui.drawCenteredString(mc.font, text, xTempo + BAR_WIDTH / 2, y - 12, 0x66CCFF);
+            gui.drawCenteredString(mc.font, text, xTempo + barWidth / 2, yTempo - (labelOffset + 2), 0x66CCFF);
         }
-        if (isMouseOver(mouseX, mouseY, xSanity, y, BAR_WIDTH, BAR_HEIGHT)) {
+        if (isMouseOver(mouseX, mouseY, xSanity, ySanity, barWidth, barHeight)) {
             if (!insaneMode) {
                 String text = String.format("%.0f%%", sanityPercent * 100f);
-                gui.drawCenteredString(mc.font, text, xSanity + BAR_WIDTH / 2, y - 12, 0xFFFFFF);
+                gui.drawCenteredString(mc.font, text, xSanity + barWidth / 2, ySanity - (labelOffset + 2), 0xFFFFFF);
             } else {
                 String text = String.format("%.0f%%", insanityPercent * 100f);
-                gui.drawCenteredString(mc.font, text, xSanity + BAR_WIDTH / 2, y - 12, 0xCC66FF);
+                gui.drawCenteredString(mc.font, text, xSanity + barWidth / 2, ySanity - (labelOffset + 2), 0xCC66FF);
             }
         }
     }
