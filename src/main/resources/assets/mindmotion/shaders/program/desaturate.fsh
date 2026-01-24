@@ -57,6 +57,17 @@ vec4 sampleBlur(vec2 uv) {
     return center + sum;
 }
 
+float filmGrain(vec2 uv, float t) {
+    float n = sin(dot(uv * vec2(120.0, 90.0), vec2(12.9898, 78.233)) + t * 6.0);
+    return n * 0.5 + 0.5;
+}
+
+vec3 filmicTone(vec3 color, float exposure) {
+    color *= exposure;
+    color = max(vec3(0.0), color - 0.004);
+    return (color * (6.2 * color + 0.5)) / (color * (6.2 * color + 1.7) + 0.06);
+}
+
 void main() {
     vec2 shockUV = applyShockwave(texCoord);
 
@@ -92,6 +103,10 @@ void main() {
     vec3 fogColor = mix(vec3(0.75), vec3(0.6, 0.65, 0.8), intensity);
     col.rgb = mix(col.rgb, fogColor, FogStrength);
 
+    // Radial glow to emphasize focus at center during spikes
+    float glow = smoothstep(0.5, 0.05, dist) * (PulseStrength * 0.3 + FlashStrength * 0.25);
+    col.rgb += blurred.rgb * glow * 0.6;
+
     // Stronger base vignette
     float vign = smoothstep(0.18, 0.65, dist);
     float vignetteBoost = mix(1.0, 1.6, intensity);
@@ -124,13 +139,18 @@ void main() {
         col.rgb = mix(col.rgb, drift, PulseStrength * 0.2);
     }
 
-    // Add subtle grain and contrast as insanity rises
-    float grain = sin(dot(shockUV * vec2(120.0, 90.0), vec2(12.9898, 78.233)) + Time * 6.0);
-    grain = (grain * 0.5 + 0.5) * intensity * 0.08;
+    // Add subtle scanlines and grain as insanity rises
+    float scan = sin((shockUV.y + Time * 0.15) * 800.0) * 0.5 + 0.5;
+    scan = mix(1.0, scan, intensity * 0.08);
+    col.rgb *= scan;
+
+    float grain = filmGrain(shockUV, Time);
+    grain = (grain - 0.5) * intensity * 0.12;
     col.rgb += grain;
 
     float contrast = 1.0 + intensity * 0.35;
     col.rgb = (col.rgb - 0.5) * contrast + 0.5;
+    col.rgb = filmicTone(col.rgb, 1.05 + intensity * 0.2);
     col.rgb = clamp(col.rgb, 0.0, 1.0);
     fragColor = vec4(col.rgb, 1.0);
 }
