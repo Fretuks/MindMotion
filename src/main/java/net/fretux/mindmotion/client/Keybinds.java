@@ -9,6 +9,7 @@ import net.minecraft.client.KeyMapping;
 public class Keybinds {
 
     public static KeyMapping VENT_KEY;
+    public static KeyMapping HUD_EDITOR_KEY;
 
     public static void register(RegisterKeyMappingsEvent event) {
         VENT_KEY = new KeyMapping(
@@ -20,6 +21,16 @@ public class Keybinds {
                 "key.categories.mindmotion"
         );
 
+        HUD_EDITOR_KEY = new KeyMapping(
+                "key.mindmotion.hud_editor",
+                KeyConflictContext.IN_GAME,
+                KeyModifier.NONE,
+                InputConstants.Type.KEYSYM,
+                InputConstants.KEY_O,
+                "key.categories.mindmotion"
+        );
+
         event.register(VENT_KEY);
+        event.register(HUD_EDITOR_KEY);
     }
 }

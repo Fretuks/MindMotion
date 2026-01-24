@@ -1,0 +1,14 @@
+{
+  "key.categories.mindmotion": "MindMotion",
+  "key.mindmotion.vent": "Vent",
+  "key.mindmotion.hud_editor": "HUD Editor",
+  "screen.mindmotion.hud_editor.title": "MindMotion HUD Editor",
+  "screen.mindmotion.hud_editor.instructions": "Drag the bars or use sliders to position and resize.",
+  "screen.mindmotion.hud_editor.bar_width": "Bar Width: %s",
+  "screen.mindmotion.hud_editor.bar_height": "Bar Height: %s",
+  "screen.mindmotion.hud_editor.tempo_x": "Tempo X Offset: %s",
+  "screen.mindmotion.hud_editor.tempo_y": "Tempo Y Offset: %s",
+  "screen.mindmotion.hud_editor.sanity_x": "Sanity X Offset: %s",
+  "screen.mindmotion.hud_editor.sanity_y": "Sanity Y Offset: %s",
+  "screen.mindmotion.hud_editor.reset": "Reset"
+}
