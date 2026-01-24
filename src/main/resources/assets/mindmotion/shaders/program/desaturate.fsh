@@ -23,29 +23,37 @@ vec2 applyShockwave(vec2 uv) {
     float dist = length(dir);
 
     // outwards pulse that quickly fades after the shockwave passes
-    float wave = sin((dist - Time * 1.75) * 32.0) * 0.012 * ShockwaveStrength;
-    float falloff = smoothstep(0.05, 0.35, dist) * (1.0 - smoothstep(0.35, 0.9, dist));
-    wave *= falloff;
+    float wave = sin((dist - Time * 1.65) * 30.0) * 0.014 * ShockwaveStrength;
+    float band = smoothstep(0.08, 0.32, dist) * (1.0 - smoothstep(0.32, 0.85, dist));
+    wave *= band;
+
+    float push = smoothstep(0.05, 0.2, dist) * (1.0 - smoothstep(0.2, 0.55, dist));
+    float pushAmount = ShockwaveStrength * 0.01 * push;
 
     if (dist > 0.0001) {
         dir = normalize(dir);
     }
 
-    return uv + dir * wave;
+    return uv + dir * (wave + pushAmount);
 }
 
 vec4 sampleBlur(vec2 uv) {
     if (BlurAmount <= 0.001) return texture(DiffuseSampler, uv);
 
-    float w = BlurAmount * 0.5;
+    float w = BlurAmount * 0.12;
 
     vec4 sum = vec4(0.0);
     sum += texture(DiffuseSampler, uv + oneTexel * vec2(-1, 0)) * w;
     sum += texture(DiffuseSampler, uv + oneTexel * vec2( 1, 0)) * w;
     sum += texture(DiffuseSampler, uv + oneTexel * vec2( 0,-1)) * w;
     sum += texture(DiffuseSampler, uv + oneTexel * vec2( 0, 1)) * w;
+    sum += texture(DiffuseSampler, uv + oneTexel * vec2(-1, -1)) * (w * 0.7);
+    sum += texture(DiffuseSampler, uv + oneTexel * vec2( 1, -1)) * (w * 0.7);
+    sum += texture(DiffuseSampler, uv + oneTexel * vec2(-1,  1)) * (w * 0.7);
+    sum += texture(DiffuseSampler, uv + oneTexel * vec2( 1,  1)) * (w * 0.7);
 
-    vec4 center = texture(DiffuseSampler, uv) * (1.0 - w * 4.0);
+    float centerWeight = max(0.0, 1.0 - w * 6.8);
+    vec4 center = texture(DiffuseSampler, uv) * centerWeight;
     return center + sum;
 }
 
@@ -59,6 +67,11 @@ void main() {
     );
     vec2 center = vec2(0.5);
     vec2 fromCenter = shockUV - center;
+    float dist = length(fromCenter);
+
+    // subtle lens warp as insanity rises
+    float warp = intensity * 0.012 + PulseStrength * 0.006;
+    shockUV += fromCenter * warp * dist;
 
     // Chromatic aberration that ramps up with insanity
     vec2 chromaOffset = fromCenter * (0.002 + intensity * 0.004);
@@ -80,8 +93,7 @@ void main() {
     col.rgb = mix(col.rgb, fogColor, FogStrength);
 
     // Stronger base vignette
-    float dist = distance(texCoord, center);
-    float vign = smoothstep(0.15, 0.6, dist);
+    float vign = smoothstep(0.18, 0.65, dist);
     float vignetteBoost = mix(1.0, 1.6, intensity);
     col.rgb = mix(col.rgb, vec3(0.0), vign * Vignette * vignetteBoost);
 
@@ -104,6 +116,12 @@ void main() {
             : vec3(0.05, 0.05, 0.07); // deep blue-black
     
         col.rgb = mix(col.rgb, flashColor, intensity);
+    }
+
+    // Color drift toward cold hues with pulse
+    if (PulseStrength > 0.001) {
+        vec3 drift = vec3(col.r * 0.98, col.g * 1.01, col.b * 1.05);
+        col.rgb = mix(col.rgb, drift, PulseStrength * 0.2);
     }
 
     // Add subtle grain and contrast as insanity rises
