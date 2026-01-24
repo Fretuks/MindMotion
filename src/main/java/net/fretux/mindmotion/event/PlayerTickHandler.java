@@ -198,6 +198,15 @@ public class PlayerTickHandler {
             if (percent <= 10 && Math.random() < ConfigMM.COMMON.SCRATCHING_CHANCE.get()) {
                 applyScratching(player);
             }
+            if (percent <= 40 && Math.random() < 0.02) {
+                applyVertigo(player);
+            }
+            if (percent <= 20 && Math.random() < 0.015) {
+                applyDread(player);
+            }
+            if (percent <= 5 && Math.random() < 0.01) {
+                applyBlackout(player);
+            }
             if (percent <= 50 && Math.random() < ConfigMM.COMMON.PANIC_CHANCE.get()) {
                 applyPanic(player);
             }
@@ -208,6 +217,15 @@ public class PlayerTickHandler {
                 }
                 if (insanityPercent > 90 && Math.random() < ConfigMM.COMMON.SCRATCHING_CHANCE.get()) {
                     applyScratching(player);
+                }
+                if (insanityPercent > 50 && Math.random() < 0.03) {
+                    applyVertigo(player);
+                }
+                if (insanityPercent > 75 && Math.random() < 0.02) {
+                    applyDread(player);
+                }
+                if (insanityPercent > 90 && Math.random() < 0.015) {
+                    applyBlackout(player);
                 }
             }
             if (ConfigMM.COMMON.ENABLE_LOW_SANITY_SOUNDS.get() && percent <= 30f) {
@@ -254,12 +272,27 @@ public class PlayerTickHandler {
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 1));
         player.hurt(player.damageSources().magic(), 1f);
         applyShiver(player);
+        applyVertigo(player);
     }
 
     private static void applyScratching(Player player) {
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 30, 1));
         player.hurt(player.damageSources().magic(), 2f);
         applyShiver(player);
+        applyDread(player);
+    }
+
+    private static void applyVertigo(Player player) {
+        player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 120, 0));
+    }
+
+    private static void applyDread(Player player) {
+        player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 0));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1));
+    }
+
+    private static void applyBlackout(Player player) {
+        player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 80, 0));
     }
 
     private static void playSanitySound(Player player) {
