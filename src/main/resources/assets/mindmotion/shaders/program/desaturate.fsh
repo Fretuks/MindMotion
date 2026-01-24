@@ -52,7 +52,20 @@ vec4 sampleBlur(vec2 uv) {
 void main() {
     vec2 shockUV = applyShockwave(texCoord);
 
-    vec4 col = texture(DiffuseSampler, shockUV);
+    float intensity = clamp(
+        PulseStrength * 0.6 + FlashStrength * 0.5 + Vignette * 0.35 + FogStrength * 0.2,
+        0.0,
+        1.0
+    );
+    vec2 center = vec2(0.5);
+    vec2 fromCenter = shockUV - center;
+
+    // Chromatic aberration that ramps up with insanity
+    vec2 chromaOffset = fromCenter * (0.002 + intensity * 0.004);
+    float r = texture(DiffuseSampler, shockUV + chromaOffset).r;
+    float g = texture(DiffuseSampler, shockUV).g;
+    float b = texture(DiffuseSampler, shockUV - chromaOffset).b;
+    vec4 col = vec4(r, g, b, 1.0);
 
     // Blur
     vec4 blurred = sampleBlur(shockUV);
@@ -63,12 +76,14 @@ void main() {
     col.rgb = mix(col.rgb, vec3(gray), clamp(Desat, 0.0, 1.0));
 
     // Fog
-    col.rgb = mix(col.rgb, vec3(0.75), FogStrength);
+    vec3 fogColor = mix(vec3(0.75), vec3(0.6, 0.65, 0.8), intensity);
+    col.rgb = mix(col.rgb, fogColor, FogStrength);
 
     // Stronger base vignette
-    float dist = distance(texCoord, vec2(0.5));
+    float dist = distance(texCoord, center);
     float vign = smoothstep(0.15, 0.6, dist);
-    col.rgb = mix(col.rgb, vec3(0.0), vign * Vignette);
+    float vignetteBoost = mix(1.0, 1.6, intensity);
+    col.rgb = mix(col.rgb, vec3(0.0), vign * Vignette * vignetteBoost);
 
     // Pulsating vignette toward black
     if (PulseStrength > 0.001) {
@@ -90,5 +105,14 @@ void main() {
     
         col.rgb = mix(col.rgb, flashColor, intensity);
     }
+
+    // Add subtle grain and contrast as insanity rises
+    float grain = sin(dot(shockUV * vec2(120.0, 90.0), vec2(12.9898, 78.233)) + Time * 6.0);
+    grain = (grain * 0.5 + 0.5) * intensity * 0.08;
+    col.rgb += grain;
+
+    float contrast = 1.0 + intensity * 0.35;
+    col.rgb = (col.rgb - 0.5) * contrast + 0.5;
+    col.rgb = clamp(col.rgb, 0.0, 1.0);
     fragColor = vec4(col.rgb, 1.0);
 }
