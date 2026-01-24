@@ -99,10 +99,6 @@ public class SanityShaderHandler {
             }
         }
         PostChain chain = mc.gameRenderer.currentEffect();
-        LOGGER.info("effect class={}, accessorApplied={}",
-                chain == null ? "null" : chain.getClass().getName(),
-                chain instanceof PostChainAccessor
-        );
         if (chain == null) return;
         try {
             for (PostPass pass : safeGetPasses(chain)) {
