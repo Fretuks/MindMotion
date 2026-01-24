@@ -27,6 +27,12 @@ public final class ConfigMM {
         public final ForgeConfigSpec.BooleanValue DISABLE_SHADERS;
         public final ForgeConfigSpec.DoubleValue FLASH_STRENGTH_MULTIPLIER;
         public final ForgeConfigSpec.DoubleValue SANITY_DESAT_MULTIPLIER;
+        public final ForgeConfigSpec.IntValue BAR_WIDTH;
+        public final ForgeConfigSpec.IntValue BAR_HEIGHT;
+        public final ForgeConfigSpec.IntValue TEMPO_BAR_X_OFFSET;
+        public final ForgeConfigSpec.IntValue TEMPO_BAR_Y_OFFSET;
+        public final ForgeConfigSpec.IntValue SANITY_BAR_X_OFFSET;
+        public final ForgeConfigSpec.IntValue SANITY_BAR_Y_OFFSET;
 
         Client(ForgeConfigSpec.Builder b) {
             b.push("visual");
@@ -42,6 +48,32 @@ public final class ConfigMM {
             SANITY_DESAT_MULTIPLIER = b
                     .comment("Intensity of desaturation from low sanity.")
                     .defineInRange("sanityDesaturationMultiplier", 1.0, 0.0, 3.0);
+
+            b.pop().push("hud");
+
+            BAR_WIDTH = b
+                    .comment("Width of sanity/tempo bars in pixels.")
+                    .defineInRange("barWidth", 102, 40, 240);
+
+            BAR_HEIGHT = b
+                    .comment("Height of sanity/tempo bars in pixels.")
+                    .defineInRange("barHeight", 9, 4, 30);
+
+            TEMPO_BAR_X_OFFSET = b
+                    .comment("Horizontal offset for the tempo bar relative to its default position.")
+                    .defineInRange("tempoBarXOffset", 0, -300, 300);
+
+            TEMPO_BAR_Y_OFFSET = b
+                    .comment("Vertical offset for the tempo bar relative to its default position.")
+                    .defineInRange("tempoBarYOffset", 0, -300, 300);
+
+            SANITY_BAR_X_OFFSET = b
+                    .comment("Horizontal offset for the sanity bar relative to its default position.")
+                    .defineInRange("sanityBarXOffset", 0, -300, 300);
+
+            SANITY_BAR_Y_OFFSET = b
+                    .comment("Vertical offset for the sanity bar relative to its default position.")
+                    .defineInRange("sanityBarYOffset", 0, -300, 300);
 
             b.pop();
         }
