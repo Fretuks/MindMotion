@@ -81,6 +81,8 @@ public class PlayerTickHandler {
             boolean inRain = player.level().isRainingAt(player.blockPosition());
             boolean isHungry = player.getFoodData().getFoodLevel() < 6;
             boolean nearLava = player.level().getBlockState(player.blockPosition().below()).is(Blocks.LAVA);
+            // Prevent false "exposure" sanity drain while riding seats like boats, minecarts, or modded chairs.
+            boolean isMounted = player.isPassenger();
             boolean inWater = player.isInWater() && !player.isUnderWater();
             boolean underWater = player.isUnderWater();
             boolean sleeping = player.isSleeping();
@@ -90,8 +92,8 @@ public class PlayerTickHandler {
             if (inRain) delta -= 0.04f;
             if (isHungry) delta -= 0.06f;
             if (nearLava) delta -= 0.05f;
-            if (underWater) delta -= 0.04f;
-            if (inWater && !underWater) delta -= 0.02f;
+            if (!isMounted && underWater) delta -= 0.04f;
+            if (!isMounted && inWater && !underWater) delta -= 0.02f;
             int light = player.level().getMaxLocalRawBrightness(player.blockPosition());
             if (light <= 2) delta -= 0.10f;
             else if (light <= 5) delta -= 0.05f;
