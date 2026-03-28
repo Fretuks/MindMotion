@@ -1,7 +1,7 @@
 package net.fretux.mindmotion.network;
 
-import net.fretux.mindmotion.client.shader.VentShaderHandler;
-import net.minecraft.client.Minecraft;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -16,10 +16,10 @@ public class VentClientEffectPacket {
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null) return;
-            mc.player.swingTime = 10;
-            VentShaderHandler.triggerVentShockwave();
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+                    net.fretux.mindmotion.client.ClientPacketHandlers.handleVentEffect()
+            );
         });
+        ctx.get().setPacketHandled(true);
     }
 }

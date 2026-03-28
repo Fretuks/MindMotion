@@ -1,13 +1,14 @@
 package net.fretux.mindmotion;
 
 import com.mojang.logging.LogUtils;
-import net.fretux.mindmotion.client.Keybinds;
 import net.fretux.mindmotion.command.SanityCommand;
 import net.fretux.mindmotion.event.CombatEvents;
 import net.fretux.mindmotion.event.PlayerTickHandler;
 import net.fretux.mindmotion.network.ModMessages;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -23,7 +24,9 @@ public class AscendMindMotion {
     public AscendMindMotion() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
-        modEventBus.addListener(Keybinds::register);
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+                net.fretux.mindmotion.client.ClientBootstrap.init(modEventBus)
+        );
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(PlayerTickHandler.class);
         MinecraftForge.EVENT_BUS.register(CombatEvents.class);
