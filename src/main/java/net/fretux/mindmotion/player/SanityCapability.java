@@ -14,7 +14,11 @@ public class SanityCapability implements ISanity {
     @Override
     public void setSanity(float sanity) {
         float max = getMaxSanity();
-        this.sanity = Math.max(0, Math.min(max, sanity));
+        float clampedSanity = Math.max(0, Math.min(max, sanity));
+        if (clampedSanity > this.sanity && this.insanity > 0f) {
+            return;
+        }
+        this.sanity = clampedSanity;
     }
 
     @Override
@@ -25,7 +29,11 @@ public class SanityCapability implements ISanity {
     @Override
     public void setInsanity(float insanity) {
         float max = getMaxSanity();
-        this.insanity = Math.max(0, Math.min(max, insanity));
+        float clampedInsanity = Math.max(0, Math.min(max, insanity));
+        if (clampedInsanity > this.insanity && this.sanity > 0f) {
+            return;
+        }
+        this.insanity = clampedInsanity;
     }
 
     @Override

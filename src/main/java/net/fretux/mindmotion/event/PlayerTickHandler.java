@@ -155,10 +155,6 @@ public class PlayerTickHandler {
             if (isInsane) {
                 if (delta > 0) {
                     sanity.setInsanity(Math.max(0, insanity - delta));
-                    insanity = sanity.getInsanity();
-                    if (insanity <= 0) {
-                        sanity.setSanity(Math.min(sanity.getMaxSanity(), value + delta));
-                    }
                     return;
                 }
                 float newValue = value + delta;
