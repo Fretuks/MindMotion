@@ -88,8 +88,8 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    compileOnly fg.deobf("net.fretux.ascend:Ascend:2.2.1")
-    runtimeOnly fg.deobf("net.fretux.ascend:Ascend:2.2.1")
+    compileOnly fg.deobf("net.fretux.ascend:Ascend:2.2.3")
+    runtimeOnly fg.deobf("net.fretux.ascend:Ascend:2.2.3")
 
     // Iron's Spellbooks
     compileOnly fg.deobf("io.redspace.ironsspellbooks:irons_spellbooks:${irons_spells_version}:api")
