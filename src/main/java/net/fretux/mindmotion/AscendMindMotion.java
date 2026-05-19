@@ -2,8 +2,7 @@ package net.fretux.mindmotion;
 
 import com.mojang.logging.LogUtils;
 import net.fretux.mindmotion.command.SanityCommand;
-import net.fretux.mindmotion.event.CombatEvents;
-import net.fretux.mindmotion.event.PlayerTickHandler;
+import net.fretux.mindmotion.event.CommonEvents;
 import net.fretux.mindmotion.network.ModMessages;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.api.distmarker.Dist;
@@ -28,8 +27,7 @@ public class AscendMindMotion {
                 net.fretux.mindmotion.client.ClientBootstrap.init(modEventBus)
         );
         MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(PlayerTickHandler.class);
-        MinecraftForge.EVENT_BUS.register(CombatEvents.class);
+        MinecraftForge.EVENT_BUS.register(new CommonEvents());
         MinecraftForge.EVENT_BUS.register(SanityCommand.class);
         LOGGER.info("Ascend: Mind and Motion initialized!");
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigMM.CLIENT_SPEC);

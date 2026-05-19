@@ -83,6 +83,7 @@ public final class ConfigMM {
         public final ForgeConfigSpec.DoubleValue BASE_SANITY_REGEN_LIGHT;
         public final ForgeConfigSpec.DoubleValue BASE_SANITY_DECAY_DARK;
         public final ForgeConfigSpec.BooleanValue ENABLE_LOW_SANITY_SOUNDS;
+        public final ForgeConfigSpec.BooleanValue ENABLE_SANITY_GAMEPLAY_EFFECTS;
         public final ForgeConfigSpec.DoubleValue SCRATCHING_CHANCE;
         public final ForgeConfigSpec.DoubleValue PANIC_CHANCE;
         public final ForgeConfigSpec.IntValue TEMPO_DECAY_DELAY;
@@ -103,6 +104,10 @@ public final class ConfigMM {
             ENABLE_LOW_SANITY_SOUNDS = b
                     .comment("Enable creepy noises when sanity is low.")
                     .define("enableLowSanitySounds", true);
+
+            ENABLE_SANITY_GAMEPLAY_EFFECTS = b
+                    .comment("Enable gameplay penalties from low sanity and high insanity, beyond shaders and sounds.")
+                    .define("enableSanityGameplayEffects", true);
 
             b.pop().push("insanity");
 

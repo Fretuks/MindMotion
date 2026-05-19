@@ -9,6 +9,7 @@ import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -189,7 +190,11 @@ public class PlayerTickHandler {
                     insanity = sanity.getInsanity();
                 }
             }
-            float percent = (value / sanity.getMaxSanity()) * 100f;
+            float percent = (sanity.getSanity() / sanity.getMaxSanity()) * 100f;
+            float insanityPercent = (insanity / sanity.getMaxSanity()) * 100f;
+            if (ConfigMM.COMMON.ENABLE_SANITY_GAMEPLAY_EFFECTS.get()) {
+                applySanityGameplayPressure(player, percent, insanityPercent);
+            }
             if (percent <= 70 && Math.random() < 0.03) {
                 applyShiver(player);
             }
@@ -208,7 +213,6 @@ public class PlayerTickHandler {
             if (percent <= 50 && Math.random() < ConfigMM.COMMON.PANIC_CHANCE.get()) {
                 applyPanic(player);
             }
-            float insanityPercent = (insanity / sanity.getMaxSanity()) * 100f;
             if (insanityPercent > 0) {
                 if (insanityPercent > 60 && Math.random() < ConfigMM.COMMON.PANIC_CHANCE.get()) {
                     applyPanic(player);
@@ -238,6 +242,68 @@ public class PlayerTickHandler {
                 lowSanitySoundCooldown.remove(player.getUUID());
             }
         });
+    }
+
+    private static void applySanityGameplayPressure(Player player, float sanityPercent, float insanityPercent) {
+        float lowSanity = clamp01((55f - sanityPercent) / 55f);
+        float highInsanity = clamp01((insanityPercent - 35f) / 65f);
+        float pressure = Math.max(lowSanity, highInsanity);
+        if (pressure <= 0f) return;
+
+        if (!player.getAbilities().instabuild) {
+            player.causeFoodExhaustion(0.08f + pressure * 0.18f);
+        }
+
+        if (sanityPercent <= 35f) {
+            int amplifier = sanityPercent <= 15f ? 1 : 0;
+            player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 60, amplifier, true, true));
+        }
+
+        if (player.isUsingItem() && (sanityPercent <= 25f || insanityPercent >= 70f)) {
+            float interruptChance = 0.06f + pressure * 0.12f;
+            if (player.getRandom().nextFloat() < interruptChance) {
+                player.stopUsingItem();
+            }
+        }
+
+        if ((sanityPercent <= 15f || insanityPercent >= 80f) && player.getRandom().nextFloat() < 0.08f + pressure * 0.10f) {
+            applyStumble(player, pressure);
+        }
+
+        if (insanityPercent >= 45f) {
+            int tempoLoss = Math.max(1, Math.round(highInsanity * 4f));
+            player.getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(tempo -> tempo.reduceTempo(tempoLoss));
+        }
+
+        if (insanityPercent >= 60f && player.getRandom().nextFloat() < 0.18f + highInsanity * 0.20f) {
+            alertNearbyMonsters(player, 10.0 + highInsanity * 10.0);
+        }
+    }
+
+    private static void applyStumble(Player player, float pressure) {
+        double strength = 0.08 + pressure * 0.16;
+        double x = (player.getRandom().nextDouble() - 0.5) * strength;
+        double z = (player.getRandom().nextDouble() - 0.5) * strength;
+        player.setDeltaMovement(player.getDeltaMovement().add(x, 0.0, z));
+        player.hurtMarked = true;
+        if (player.isSprinting() && player.getRandom().nextFloat() < 0.5f) {
+            player.setSprinting(false);
+        }
+    }
+
+    private static void alertNearbyMonsters(Player player, double radius) {
+        player.level().getEntitiesOfClass(Monster.class, player.getBoundingBox().inflate(radius),
+                monster -> monster.isAlive() && monster.hasLineOfSight(player)
+        ).forEach(monster -> {
+            if (monster.getTarget() == null || monster.getRandom().nextFloat() < 0.35f) {
+                monster.setTarget(player);
+            }
+            monster.getNavigation().moveTo(player, 1.1);
+        });
+    }
+
+    private static float clamp01(float value) {
+        return Math.max(0f, Math.min(1f, value));
     }
 
     private static void handleTempoTick(Player player, int currentTick) {

@@ -10,9 +10,9 @@ public class CommonEvents {
     @SubscribeEvent
     public void onPlayerHurt(LivingHurtEvent event) {
         if (!(event.getEntity() instanceof net.minecraft.world.entity.player.Player player)) return;
+        if (player.level().isClientSide) return;
 
         player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity -> sanity.reduceSanity(1));
-        player.getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(tempo -> tempo.addTempo(4));
     }
 
     @SubscribeEvent
@@ -20,7 +20,17 @@ public class CommonEvents {
         event.getOriginal().reviveCaps();
         event.getEntity().getCapability(PlayerCapabilityProvider.SANITY).ifPresent(newCap ->
             event.getOriginal().getCapability(PlayerCapabilityProvider.SANITY)
-                    .ifPresent(oldCap -> newCap.setSanity(oldCap.getSanity()))
+                    .ifPresent(oldCap -> {
+                        newCap.setSanity(oldCap.getSanity());
+                        newCap.setInsanity(oldCap.getInsanity());
+                    })
+        );
+        event.getEntity().getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(newCap ->
+            event.getOriginal().getCapability(PlayerCapabilityProvider.TEMPO)
+                    .ifPresent(oldCap -> {
+                        newCap.setTempo(oldCap.getTempo());
+                        newCap.setVentCooldown(oldCap.getVentCooldown());
+                    })
         );
         event.getOriginal().invalidateCaps();
     }
