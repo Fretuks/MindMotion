@@ -40,6 +40,8 @@ public class PlayerCapabilityProvider {
         @Override
         public CompoundTag serializeNBT() {
             CompoundTag tag = new CompoundTag();
+            tag.putFloat("BaseMaxSanity", instance.getBaseMaxSanity());
+            tag.putFloat("BonusMaxSanity", instance.getBonusMaxSanity());
             tag.putFloat("Sanity", instance.getSanity());
             tag.putFloat("Insanity", instance.getInsanity());
             return tag;
@@ -47,6 +49,12 @@ public class PlayerCapabilityProvider {
 
         @Override
         public void deserializeNBT(CompoundTag nbt) {
+            if (nbt.contains("BaseMaxSanity")) {
+                instance.setBaseMaxSanity(nbt.getFloat("BaseMaxSanity"));
+            }
+            if (nbt.contains("BonusMaxSanity")) {
+                instance.setBonusMaxSanity(nbt.getFloat("BonusMaxSanity"));
+            }
             instance.setSanity(nbt.getFloat("Sanity"));
             instance.setInsanity(nbt.getFloat("Insanity"));
         }

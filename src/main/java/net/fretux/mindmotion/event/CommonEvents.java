@@ -1,6 +1,7 @@
 package net.fretux.mindmotion.event;
 
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
+import net.fretux.mindmotion.player.SanityCapability;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -21,8 +22,17 @@ public class CommonEvents {
         event.getEntity().getCapability(PlayerCapabilityProvider.SANITY).ifPresent(newCap ->
             event.getOriginal().getCapability(PlayerCapabilityProvider.SANITY)
                     .ifPresent(oldCap -> {
-                        newCap.setSanity(oldCap.getSanity());
-                        newCap.setInsanity(oldCap.getInsanity());
+                        if (newCap instanceof SanityCapability newImpl && oldCap instanceof SanityCapability oldImpl) {
+                            newImpl.setBaseMaxSanity(oldImpl.getBaseMaxSanity());
+                            newImpl.setBonusMaxSanity(oldImpl.getBonusMaxSanity());
+                        }
+                        if (event.isWasDeath()) {
+                            newCap.setInsanity(0f);
+                            newCap.setSanity(newCap.getMaxSanity());
+                        } else {
+                            newCap.setSanity(oldCap.getSanity());
+                            newCap.setInsanity(oldCap.getInsanity());
+                        }
                     })
         );
         event.getEntity().getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(newCap ->

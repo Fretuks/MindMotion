@@ -57,6 +57,10 @@ public class SanityCapability implements ISanity {
         setInsanity(this.insanity);
     }
 
+    public float getBaseMaxSanity() {
+        return baseMaxSanity;
+    }
+
     public void setBonusMaxSanity(float bonusMaxSanity) {
         this.bonusMaxSanity = Math.max(0f, bonusMaxSanity);
         clampToMax();
