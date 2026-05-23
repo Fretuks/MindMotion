@@ -2,7 +2,10 @@ package net.fretux.mindmotion.event;
 
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
 import net.fretux.mindmotion.player.SanityCapability;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -13,7 +16,22 @@ public class CommonEvents {
         if (!(event.getEntity() instanceof net.minecraft.world.entity.player.Player player)) return;
         if (player.level().isClientSide) return;
 
-        player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity -> sanity.reduceSanity(1));
+        float loss = Math.min(5f, 0.5f + event.getAmount() * 0.25f);
+        player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity -> sanity.reduceSanity(loss));
+    }
+
+    @SubscribeEvent
+    public void onLivingDeath(LivingDeathEvent event) {
+        if (!(event.getSource().getEntity() instanceof net.minecraft.world.entity.player.Player player)) return;
+        if (player.level().isClientSide) return;
+
+        player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity -> {
+            if (event.getEntity() instanceof Monster) {
+                sanity.addSanity(0.75f);
+            } else if (event.getEntity() instanceof Villager) {
+                sanity.reduceSanity(4f);
+            }
+        });
     }
 
     @SubscribeEvent

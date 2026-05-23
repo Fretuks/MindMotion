@@ -4,6 +4,8 @@ import net.fretux.mindmotion.ConfigMM;
 import net.fretux.mindmotion.network.ModMessages;
 import net.fretux.mindmotion.network.SyncStatsS2CPacket;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -89,13 +91,14 @@ public class PlayerTickHandler {
             boolean sleeping = player.isSleeping();
             boolean inLight = player.level().getMaxLocalRawBrightness(player.blockPosition()) > 12;
             boolean nearTorch = player.level().getBlockState(player.blockPosition().above()).is(Blocks.TORCH);
+            int light = player.level().getMaxLocalRawBrightness(player.blockPosition());
+
             if (inDark) delta -= ConfigMM.COMMON.BASE_SANITY_DECAY_DARK.get().floatValue();
             if (inRain) delta -= 0.04f;
             if (isHungry) delta -= 0.06f;
             if (nearLava) delta -= 0.05f;
             if (!isMounted && underWater) delta -= 0.04f;
             if (!isMounted && inWater && !underWater) delta -= 0.02f;
-            int light = player.level().getMaxLocalRawBrightness(player.blockPosition());
             if (light <= 2) delta -= 0.10f;
             else if (light <= 5) delta -= 0.05f;
             if (player.level().isThundering()) delta -= 0.06f;
@@ -152,6 +155,12 @@ public class PlayerTickHandler {
             }
             if (player.isSleepingLongEnough())
                 delta += 0.10f;
+
+            delta += getSurvivalSanityDelta(player, light);
+            delta += getStatusSanityDelta(player);
+            delta += getNearbyBlockSanityDelta(player);
+            delta += getWorldSanityDelta(player, light);
+
             boolean isInsane = insanity > 0;
             if (isInsane) {
                 if (delta > 0) {
@@ -242,6 +251,110 @@ public class PlayerTickHandler {
                 lowSanitySoundCooldown.remove(player.getUUID());
             }
         });
+    }
+
+    private static float getSurvivalSanityDelta(Player player, int light) {
+        float delta = 0f;
+        float healthPercent = player.getHealth() / player.getMaxHealth();
+        int food = player.getFoodData().getFoodLevel();
+
+        if (healthPercent <= 0.25f) delta -= 0.12f;
+        else if (healthPercent <= 0.50f) delta -= 0.06f;
+
+        if (player.isOnFire()) delta -= 0.12f;
+        if (player.isFreezing()) delta -= 0.08f;
+        if (player.getAirSupply() < player.getMaxAirSupply() / 2) delta -= 0.08f;
+        if (player.fallDistance > 6f) delta -= 0.06f;
+        if (player.isSprinting() && food <= 8) delta -= 0.03f;
+
+        if (healthPercent >= 0.95f && food >= 18 && light >= 10) delta += 0.04f;
+        if (player.isShiftKeyDown() && !player.isSprinting() && !player.isInWater() && light >= 8) delta += 0.015f;
+        if (player.getAbsorptionAmount() > 0f) delta += 0.03f;
+
+        return delta;
+    }
+
+    private static float getStatusSanityDelta(Player player) {
+        float delta = 0f;
+
+        if (player.hasEffect(MobEffects.POISON)) delta -= 0.08f;
+        if (player.hasEffect(MobEffects.WITHER)) delta -= 0.12f;
+        if (player.hasEffect(MobEffects.HUNGER)) delta -= 0.06f;
+        if (player.hasEffect(MobEffects.WEAKNESS)) delta -= 0.04f;
+        if (player.hasEffect(MobEffects.BLINDNESS)) delta -= 0.08f;
+        if (player.hasEffect(MobEffects.DARKNESS)) delta -= 0.12f;
+        if (player.hasEffect(MobEffects.CONFUSION)) delta -= 0.05f;
+        if (player.hasEffect(MobEffects.BAD_OMEN)) delta -= 0.04f;
+
+        if (player.hasEffect(MobEffects.REGENERATION)) delta += 0.06f;
+        if (player.hasEffect(MobEffects.DAMAGE_RESISTANCE)) delta += 0.04f;
+        if (player.hasEffect(MobEffects.ABSORPTION)) delta += 0.04f;
+        if (player.hasEffect(MobEffects.SATURATION)) delta += 0.05f;
+        if (player.hasEffect(MobEffects.HERO_OF_THE_VILLAGE)) delta += 0.08f;
+
+        return delta;
+    }
+
+    private static float getNearbyBlockSanityDelta(Player player) {
+        int comfortBlocks = 0;
+        int unsettlingBlocks = 0;
+
+        BlockPos center = player.blockPosition();
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-4, -2, -4), center.offset(4, 3, 4))) {
+            var state = player.level().getBlockState(pos);
+
+            if (state.is(BlockTags.BEDS)
+                    || state.is(BlockTags.CANDLES)
+                    || state.is(BlockTags.FLOWERS)
+                    || state.is(Blocks.BOOKSHELF)
+                    || state.is(Blocks.CHISELED_BOOKSHELF)
+                    || state.is(Blocks.CAMPFIRE)
+                    || state.is(Blocks.LANTERN)
+                    || state.is(Blocks.SEA_LANTERN)) {
+                comfortBlocks++;
+            }
+
+            if (state.is(Blocks.SOUL_FIRE)
+                    || state.is(Blocks.SOUL_CAMPFIRE)
+                    || state.is(Blocks.SOUL_LANTERN)
+                    || state.is(Blocks.SCULK)
+                    || state.is(Blocks.SCULK_SENSOR)
+                    || state.is(Blocks.SCULK_SHRIEKER)
+                    || state.is(Blocks.SCULK_CATALYST)
+                    || state.is(Blocks.COBWEB)
+                    || state.is(Blocks.WITHER_ROSE)
+                    || state.is(Blocks.NETHER_PORTAL)) {
+                unsettlingBlocks++;
+            }
+        }
+
+        float comfort = Math.min(0.10f, comfortBlocks * 0.008f);
+        float unsettling = Math.min(0.16f, unsettlingBlocks * 0.012f);
+        return comfort - unsettling;
+    }
+
+    private static float getWorldSanityDelta(Player player, int light) {
+        float delta = 0f;
+
+        if (player.level().canSeeSky(player.blockPosition()) && player.level().isDay() && light >= 12 && !player.level().isRaining()) {
+            delta += 0.05f;
+        }
+        if (!player.level().canSeeSky(player.blockPosition()) && player.getY() < player.level().getSeaLevel() - 24) {
+            delta -= 0.06f;
+        }
+        if (player.level().getMoonBrightness() > 0.85f && !player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
+            delta -= 0.03f;
+        }
+        if (player.level().getBiome(player.blockPosition()).is(BiomeTags.IS_OCEAN) && !player.onGround()) {
+            delta -= 0.03f;
+        }
+
+        int lastCombat = lastCombatTick.getOrDefault(player.getUUID(), -10000);
+        int ticksSinceCombat = player.tickCount - lastCombat;
+        if (ticksSinceCombat <= 80) delta -= 0.04f;
+        else if (ticksSinceCombat >= 20 * 60 && player.level().dimension() == net.minecraft.world.level.Level.OVERWORLD) delta += 0.025f;
+
+        return delta;
     }
 
     private static void applySanityGameplayPressure(Player player, float sanityPercent, float insanityPercent) {
