@@ -17,7 +17,6 @@ public final class FakeChatMessageHandler {
     private static final Random RANDOM = new Random();
     private static final int MIN_MESSAGE_DELAY = 600;
     private static final int RANDOM_MESSAGE_DELAY = 900;
-
     private static final String[] FAKE_MESSAGES = {
             "<...> behind you",
             "<Steve> did you hear that",
