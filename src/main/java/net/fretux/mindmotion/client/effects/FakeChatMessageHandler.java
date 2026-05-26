@@ -21,13 +21,13 @@ import java.util.Random;
 @Mod.EventBusSubscriber(modid = "mindmotion", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class FakeChatMessageHandler {
     private static final Random RANDOM = new Random();
-    private static final int MIN_MESSAGE_DELAY = 600;
-    private static final int RANDOM_MESSAGE_DELAY = 900;
+    private static final int MIN_MESSAGE_DELAY = 3600;
+    private static final int RANDOM_MESSAGE_DELAY = 3600;
     private static final int MAX_RECENT_NAMES = 12;
     private static final int FAKE_LEAVE_DELAY = 60;
     private static final int FAKE_JOIN_TO_MESSAGE_DELAY = 120;
-    private static final int POST_FAKE_LEAVE_COOLDOWN = 1200;
-    private static final int POST_FAKE_LEAVE_RANDOM_COOLDOWN = 600;
+    private static final int POST_FAKE_LEAVE_COOLDOWN = 4800;
+    private static final int POST_FAKE_LEAVE_RANDOM_COOLDOWN = 2400;
     private static final double WHISPER_CHANCE = 0.35;
 
     private static final String[] FALLBACK_NAMES = {
