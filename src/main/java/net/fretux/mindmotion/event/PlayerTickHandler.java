@@ -5,6 +5,9 @@ import net.fretux.mindmotion.network.ModMessages;
 import net.fretux.mindmotion.network.SyncStatsS2CPacket;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BiomeTags;
@@ -31,6 +34,30 @@ public class PlayerTickHandler {
 
     private static final int SANITY_TICK_INTERVAL = 20;
     private static final int TEMPO_TICK_INTERVAL = 15;
+    private static final SoundEvent[] FAKE_MOB_SOUNDS = {
+            SoundEvents.ZOMBIE_AMBIENT,
+            SoundEvents.ENDERMAN_STARE,
+            SoundEvents.SPIDER_AMBIENT,
+            SoundEvents.CREEPER_PRIMED,
+            SoundEvents.HUSK_AMBIENT,
+            SoundEvents.WARDEN_ANGRY
+    };
+    private static final SoundEvent[] FAKE_BLOCK_BREAK_SOUNDS = {
+            SoundEvents.STONE_BREAK,
+            SoundEvents.DEEPSLATE_BREAK,
+            SoundEvents.GRASS_BREAK,
+            SoundEvents.GRAVEL_BREAK,
+            SoundEvents.WOOD_BREAK,
+            SoundEvents.GLASS_BREAK
+    };
+    private static final SoundEvent[] FAKE_FOOTSTEP_SOUNDS = {
+            SoundEvents.STONE_STEP,
+            SoundEvents.DEEPSLATE_STEP,
+            SoundEvents.GRASS_STEP,
+            SoundEvents.GRAVEL_STEP,
+            SoundEvents.WOOD_STEP,
+            SoundEvents.SAND_STEP
+    };
     private static final Map<UUID, Integer> lastCombatTick = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> insanityDamageTicks = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> lowSanitySoundCooldown = new ConcurrentHashMap<>();
@@ -239,12 +266,13 @@ public class PlayerTickHandler {
                     applyBlackout(player);
                 }
             }
-            if (ConfigMM.COMMON.ENABLE_LOW_SANITY_SOUNDS.get() && percent <= 30f) {
+            if (ConfigMM.COMMON.ENABLE_LOW_SANITY_SOUNDS.get() && (percent <= 30f || insanityPercent >= 35f)) {
                 UUID id = player.getUUID();
                 int cd = lowSanitySoundCooldown.getOrDefault(id, 0) - SANITY_TICK_INTERVAL;
                 if (cd <= 0) {
-                    playSanitySound(player);
-                    cd = 20 * (6 + player.getRandom().nextInt(15));
+                    playSanitySound(player, percent, insanityPercent);
+                    int baseSeconds = insanityPercent >= 60f || percent <= 10f ? 5 : 6;
+                    cd = 20 * (baseSeconds + player.getRandom().nextInt(15));
                 }
                 lowSanitySoundCooldown.put(id, cd);
             } else {
@@ -472,37 +500,51 @@ public class PlayerTickHandler {
         player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 80, 0));
     }
 
-    private static void playSanitySound(Player player) {
+    private static void playSanitySound(Player player, float sanityPercent, float insanityPercent) {
         var level = player.level();
         if (level.isClientSide) return;
-        var sounds = new net.minecraft.sounds.SoundEvent[]{
-                net.minecraft.sounds.SoundEvents.ZOMBIE_AMBIENT,
-                net.minecraft.sounds.SoundEvents.ENDERMAN_STARE,
-                net.minecraft.sounds.SoundEvents.SPIDER_AMBIENT,
-                net.minecraft.sounds.SoundEvents.CREEPER_PRIMED,
-                net.minecraft.sounds.SoundEvents.HUSK_AMBIENT,
-                net.minecraft.sounds.SoundEvents.WARDEN_ANGRY
-        };
-        net.minecraft.sounds.SoundEvent chosen =
-                sounds[player.getRandom().nextInt(sounds.length)];
-        var holder = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.wrapAsHolder(chosen);
+
+        float pressure = Math.max(clamp01((30f - sanityPercent) / 30f), clamp01(insanityPercent / 100f));
+        int roll = player.getRandom().nextInt(100);
+        if (roll < 45) {
+            SoundEvent chosen = pickSound(player, FAKE_MOB_SOUNDS);
+            playFakeSound(player, chosen, 4.0, 7.0, 0.0, 1.0f, 0.9f, 0.2f);
+        } else if (roll < 72) {
+            SoundEvent chosen = pickSound(player, FAKE_BLOCK_BREAK_SOUNDS);
+            playFakeSound(player, chosen, 2.5, 6.0, -0.5, 0.85f + pressure * 0.25f, 0.85f, 0.25f);
+        } else {
+            SoundEvent chosen = pickSound(player, FAKE_FOOTSTEP_SOUNDS);
+            int steps = player.getRandom().nextFloat() < 0.35f + pressure * 0.35f ? 2 : 1;
+            for (int i = 0; i < steps; i++) {
+                playFakeSound(player, chosen, 1.8 + i * 0.8, 4.2 + i * 0.8, -0.9, 0.65f, 0.8f, 0.35f);
+            }
+        }
+    }
+
+    private static SoundEvent pickSound(Player player, SoundEvent[] sounds) {
+        return sounds[player.getRandom().nextInt(sounds.length)];
+    }
+
+    private static void playFakeSound(Player player, SoundEvent sound, double minDistance, double maxDistance,
+                                      double yOffset, float volume, float minPitch, float pitchRange) {
+        if (!(player instanceof ServerPlayer sp)) return;
+
+        var holder = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.wrapAsHolder(sound);
         float yaw = player.getYRot();
-        double angleRad = Math.toRadians(yaw + 180 + player.getRandom().nextInt(40) - 20);
-        double dist = 4.0 + player.getRandom().nextDouble() * 3.0;
+        double angleRad = Math.toRadians(yaw + 180 + player.getRandom().nextInt(90) - 45);
+        double dist = minDistance + player.getRandom().nextDouble() * (maxDistance - minDistance);
         double dx = player.getX() + Math.cos(angleRad) * dist;
         double dz = player.getZ() + Math.sin(angleRad) * dist;
-        double dy = player.getY();
-        if (player instanceof ServerPlayer sp) {
-            sp.connection.send(
-                    new net.minecraft.network.protocol.game.ClientboundSoundPacket(
-                            holder,
-                            net.minecraft.sounds.SoundSource.AMBIENT,
-                            dx, dy, dz,
-                            1.0f,
-                            0.9f + player.getRandom().nextFloat() * 0.2f,
-                            player.getRandom().nextLong()
-                    )
-            );
-        }
+        double dy = player.getY() + yOffset;
+        sp.connection.send(
+                new net.minecraft.network.protocol.game.ClientboundSoundPacket(
+                        holder,
+                        SoundSource.AMBIENT,
+                        dx, dy, dz,
+                        volume,
+                        minPitch + player.getRandom().nextFloat() * pitchRange,
+                        player.getRandom().nextLong()
+                )
+        );
     }
 }
