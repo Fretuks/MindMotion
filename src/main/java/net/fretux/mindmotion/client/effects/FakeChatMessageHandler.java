@@ -69,7 +69,7 @@ public final class FakeChatMessageHandler {
         if (event.phase != TickEvent.Phase.END) return;
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.level == null || minecraft.player == null || ConfigMM.CLIENT.DISABLE_SHADERS.get()) {
+        if (minecraft.level == null || minecraft.player == null || ConfigMM.CLIENT.DISABLE_SHADERS.get() || !ConfigMM.COMMON.ENABLE_SANITY.get() || !ClientData.SANITY_ENABLED) {
             reset();
             return;
         }

@@ -49,7 +49,7 @@ public final class ShadowFigureHandler {
 
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
-        if (minecraft.level == null || player == null || ConfigMM.CLIENT.DISABLE_SHADERS.get()) {
+        if (minecraft.level == null || player == null || ConfigMM.CLIENT.DISABLE_SHADERS.get() || !ConfigMM.COMMON.ENABLE_SANITY.get() || !ClientData.SANITY_ENABLED) {
             FIGURES.clear();
             spawnCooldown = MIN_SPAWN_DELAY;
             return;
@@ -77,7 +77,7 @@ public final class ShadowFigureHandler {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES || FIGURES.isEmpty()) return;
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.level == null || minecraft.player == null || ConfigMM.CLIENT.DISABLE_SHADERS.get()) return;
+        if (minecraft.level == null || minecraft.player == null || ConfigMM.CLIENT.DISABLE_SHADERS.get() || !ConfigMM.COMMON.ENABLE_SANITY.get() || !ClientData.SANITY_ENABLED) return;
 
         Camera camera = event.getCamera();
         Vec3 cameraPos = camera.getPosition();

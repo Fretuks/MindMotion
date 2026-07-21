@@ -65,6 +65,8 @@ public class HudEditorScreen extends Screen {
         int sliderWidth = 150;
         int y = 36;
         int step = 24;
+        boolean tempoEnabled = ConfigMM.COMMON.ENABLE_TEMPO.get() && ClientData.TEMPO_ENABLED;
+        boolean sanityEnabled = ConfigMM.COMMON.ENABLE_SANITY.get() && ClientData.SANITY_ENABLED;
 
         barWidthSlider = addRenderableWidget(new IntSlider(
                 leftX,
@@ -90,52 +92,56 @@ public class HudEditorScreen extends Screen {
         ));
 
         y += step;
-        tempoXSlider = addRenderableWidget(new IntSlider(
-                leftX,
-                y,
-                sliderWidth,
-                20,
-                "screen.mindmotion.hud_editor.tempo_x",
-                MIN_OFFSET,
-                MAX_OFFSET,
-                tempoOffsetX,
-                value -> setTempoOffsetX(value, false)
-        ));
-        tempoYSlider = addRenderableWidget(new IntSlider(
-                rightX,
-                y,
-                sliderWidth,
-                20,
-                "screen.mindmotion.hud_editor.tempo_y",
-                MIN_OFFSET,
-                MAX_OFFSET,
-                tempoOffsetY,
-                value -> setTempoOffsetY(value, false)
-        ));
+        if (tempoEnabled) {
+            tempoXSlider = addRenderableWidget(new IntSlider(
+                    leftX,
+                    y,
+                    sliderWidth,
+                    20,
+                    "screen.mindmotion.hud_editor.tempo_x",
+                    MIN_OFFSET,
+                    MAX_OFFSET,
+                    tempoOffsetX,
+                    value -> setTempoOffsetX(value, false)
+            ));
+            tempoYSlider = addRenderableWidget(new IntSlider(
+                    rightX,
+                    y,
+                    sliderWidth,
+                    20,
+                    "screen.mindmotion.hud_editor.tempo_y",
+                    MIN_OFFSET,
+                    MAX_OFFSET,
+                    tempoOffsetY,
+                    value -> setTempoOffsetY(value, false)
+            ));
+            y += step;
+        }
 
-        y += step;
-        sanityXSlider = addRenderableWidget(new IntSlider(
-                leftX,
-                y,
-                sliderWidth,
-                20,
-                "screen.mindmotion.hud_editor.sanity_x",
-                MIN_OFFSET,
-                MAX_OFFSET,
-                sanityOffsetX,
-                value -> setSanityOffsetX(value, false)
-        ));
-        sanityYSlider = addRenderableWidget(new IntSlider(
-                rightX,
-                y,
-                sliderWidth,
-                20,
-                "screen.mindmotion.hud_editor.sanity_y",
-                MIN_OFFSET,
-                MAX_OFFSET,
-                sanityOffsetY,
-                value -> setSanityOffsetY(value, false)
-        ));
+        if (sanityEnabled) {
+            sanityXSlider = addRenderableWidget(new IntSlider(
+                    leftX,
+                    y,
+                    sliderWidth,
+                    20,
+                    "screen.mindmotion.hud_editor.sanity_x",
+                    MIN_OFFSET,
+                    MAX_OFFSET,
+                    sanityOffsetX,
+                    value -> setSanityOffsetX(value, false)
+            ));
+            sanityYSlider = addRenderableWidget(new IntSlider(
+                    rightX,
+                    y,
+                    sliderWidth,
+                    20,
+                    "screen.mindmotion.hud_editor.sanity_y",
+                    MIN_OFFSET,
+                    MAX_OFFSET,
+                    sanityOffsetY,
+                    value -> setSanityOffsetY(value, false)
+            ));
+        }
 
         int buttonY = this.height - 28;
         addRenderableWidget(Button.builder(
@@ -170,7 +176,7 @@ public class HudEditorScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             BarPosition tempoBar = getTempoBarPosition();
-            if (isMouseOver(mouseX, mouseY, tempoBar)) {
+            if (isTempoEnabled() && isMouseOver(mouseX, mouseY, tempoBar)) {
                 draggingTempo = true;
                 dragStartX = mouseX;
                 dragStartY = mouseY;
@@ -179,7 +185,7 @@ public class HudEditorScreen extends Screen {
                 return true;
             }
             BarPosition sanityBar = getSanityBarPosition();
-            if (isMouseOver(mouseX, mouseY, sanityBar)) {
+            if (isSanityEnabled() && isMouseOver(mouseX, mouseY, sanityBar)) {
                 draggingSanity = true;
                 dragStartX = mouseX;
                 dragStartY = mouseY;
@@ -231,18 +237,22 @@ public class HudEditorScreen extends Screen {
     private void renderPreview(GuiGraphics gui) {
         BarPosition tempoBar = getTempoBarPosition();
         BarPosition sanityBar = getSanityBarPosition();
-        drawRoundedBar(gui, tempoBar, 0xFF33AFFF, (int) (barWidth * 0.75f));
-        gui.drawString(this.font, Component.literal("Tempo"), tempoBar.x, tempoBar.y - 12, 0x66CCFF, false);
-        drawRoundedBar(gui, sanityBar, 0xFFFFFFFF, (int) (barWidth * 0.6f));
-        int sanityLabelWidth = this.font.width("Sanity");
-        gui.drawString(
-                this.font,
-                Component.literal("Sanity"),
-                sanityBar.x + barWidth - sanityLabelWidth,
-                sanityBar.y - 12,
-                0xFFFFFF,
-                false
-        );
+        if (isTempoEnabled()) {
+            drawRoundedBar(gui, tempoBar, 0xFF33AFFF, (int) (barWidth * 0.75f));
+            gui.drawString(this.font, Component.literal("Tempo"), tempoBar.x, tempoBar.y - 12, 0x66CCFF, false);
+        }
+        if (isSanityEnabled()) {
+            drawRoundedBar(gui, sanityBar, 0xFFFFFFFF, (int) (barWidth * 0.6f));
+            int sanityLabelWidth = this.font.width("Sanity");
+            gui.drawString(
+                    this.font,
+                    Component.literal("Sanity"),
+                    sanityBar.x + barWidth - sanityLabelWidth,
+                    sanityBar.y - 12,
+                    0xFFFFFF,
+                    false
+            );
+        }
     }
 
     private BarPosition getTempoBarPosition() {
@@ -325,6 +335,14 @@ public class HudEditorScreen extends Screen {
 
     private void saveConfig() {
         ConfigMM.CLIENT_SPEC.save();
+    }
+
+    private static boolean isTempoEnabled() {
+        return ConfigMM.COMMON.ENABLE_TEMPO.get() && ClientData.TEMPO_ENABLED;
+    }
+
+    private static boolean isSanityEnabled() {
+        return ConfigMM.COMMON.ENABLE_SANITY.get() && ClientData.SANITY_ENABLED;
     }
 
     private static int clamp(int value, int min, int max) {

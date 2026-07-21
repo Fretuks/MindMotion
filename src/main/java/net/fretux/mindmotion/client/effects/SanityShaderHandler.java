@@ -46,7 +46,7 @@ public class SanityShaderHandler {
     @SubscribeEvent
     public static void onRenderWorld(RenderLevelStageEvent event) {
         Minecraft mc = Minecraft.getInstance();
-        if (ConfigMM.CLIENT.DISABLE_SHADERS.get()) {
+        if (ConfigMM.CLIENT.DISABLE_SHADERS.get() || !ConfigMM.COMMON.ENABLE_SANITY.get() || !ClientData.SANITY_ENABLED) {
             if (mc.gameRenderer.currentEffect() != null)
                 mc.gameRenderer.shutdownEffect();
             return;

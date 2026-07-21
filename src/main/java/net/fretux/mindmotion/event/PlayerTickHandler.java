@@ -78,21 +78,29 @@ public class PlayerTickHandler {
         int tick = player.tickCount;
         boolean sanityTick = tick % SANITY_TICK_INTERVAL == 0;
         boolean tempoSyncTick = tick % TEMPO_TICK_INTERVAL == 0;
+        boolean sanityEnabled = ConfigMM.COMMON.ENABLE_SANITY.get();
+        boolean tempoEnabled = ConfigMM.COMMON.ENABLE_TEMPO.get();
 
-        if (sanityTick) handleSanityAndInsanity(player);
-        handleTempoTick(player, tick);
+        if (sanityEnabled && sanityTick) handleSanityAndInsanity(player);
+        if (tempoEnabled) {
+            handleTempoTick(player, tick);
+        } else if (tick % TEMPO_TICK_INTERVAL == 0) {
+            applyTempoToManaRegen(player, 0);
+        }
 
         if (player instanceof ServerPlayer serverPlayer && (sanityTick || tempoSyncTick)) {
             player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity ->
                     player.getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(tempo ->
                             ModMessages.CHANNEL.sendTo(
                                     new SyncStatsS2CPacket(
-                                            sanity.getSanity(),
-                                            sanity.getInsanity(),
-                                            tempo.getTempo(),
-                                            tempo.getVentCooldown(),
+                                            sanityEnabled ? sanity.getSanity() : sanity.getMaxSanity(),
+                                            sanityEnabled ? sanity.getInsanity() : 0f,
+                                            tempoEnabled ? tempo.getTempo() : 0,
+                                            tempoEnabled ? tempo.getVentCooldown() : 0,
                                             sanity.getMaxSanity(),
-                                            tempo.getMaxTempo()
+                                            tempo.getMaxTempo(),
+                                            sanityEnabled,
+                                            tempoEnabled
                                     ),
                                     serverPlayer.connection.connection,
                                     net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT

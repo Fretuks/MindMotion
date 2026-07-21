@@ -13,19 +13,25 @@ public class SyncStatsS2CPacket {
     private final int ventCooldown;
     private final float maxSanity;
     private final int maxTempo;
+    private final boolean sanityEnabled;
+    private final boolean tempoEnabled;
 
     public SyncStatsS2CPacket(float sanity,
                               float insanity,
                               int tempo,
                               int ventCooldown,
                               float maxSanity,
-                              int maxTempo) {
+                              int maxTempo,
+                              boolean sanityEnabled,
+                              boolean tempoEnabled) {
         this.sanity = sanity;
         this.insanity = insanity;
         this.tempo = tempo;
         this.ventCooldown = ventCooldown;
         this.maxSanity = maxSanity;
         this.maxTempo = maxTempo;
+        this.sanityEnabled = sanityEnabled;
+        this.tempoEnabled = tempoEnabled;
     }
 
     public static void encode(SyncStatsS2CPacket msg, FriendlyByteBuf buf) {
@@ -35,6 +41,8 @@ public class SyncStatsS2CPacket {
         buf.writeInt(msg.ventCooldown);
         buf.writeFloat(msg.maxSanity);
         buf.writeInt(msg.maxTempo);
+        buf.writeBoolean(msg.sanityEnabled);
+        buf.writeBoolean(msg.tempoEnabled);
     }
 
     public static SyncStatsS2CPacket decode(FriendlyByteBuf buf) {
@@ -44,7 +52,9 @@ public class SyncStatsS2CPacket {
         int ventCooldown = buf.readInt();
         float maxSanity = buf.readFloat();
         int maxTempo = buf.readInt();
-        return new SyncStatsS2CPacket(sanity, insanity, tempo, ventCooldown, maxSanity, maxTempo);
+        boolean sanityEnabled = buf.readBoolean();
+        boolean tempoEnabled = buf.readBoolean();
+        return new SyncStatsS2CPacket(sanity, insanity, tempo, ventCooldown, maxSanity, maxTempo, sanityEnabled, tempoEnabled);
     }
 
     public static void handle(SyncStatsS2CPacket msg, Supplier<NetworkEvent.Context> ctx) {
@@ -55,6 +65,8 @@ public class SyncStatsS2CPacket {
             ClientData.VENT_COOLDOWN = msg.ventCooldown;
             ClientData.MAX_SANITY = msg.maxSanity;
             ClientData.MAX_TEMPO = msg.maxTempo;
+            ClientData.SANITY_ENABLED = msg.sanityEnabled;
+            ClientData.TEMPO_ENABLED = msg.tempoEnabled;
         });
         ctx.get().setPacketHandled(true);
 
@@ -64,7 +76,9 @@ public class SyncStatsS2CPacket {
                         ", Tempo: " + msg.tempo +
                         ", VentCD: " + msg.ventCooldown +
                         ", MaxSanity: " + msg.maxSanity +
-                        ", MaxTempo: " + msg.maxTempo
+                        ", MaxTempo: " + msg.maxTempo +
+                        ", SanityEnabled: " + msg.sanityEnabled +
+                        ", TempoEnabled: " + msg.tempoEnabled
         );
     }
 }

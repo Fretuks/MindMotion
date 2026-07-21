@@ -1,5 +1,6 @@
 package net.fretux.mindmotion.event;
 
+import net.fretux.mindmotion.ConfigMM;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
 import net.fretux.mindmotion.player.SanityCapability;
 import net.minecraft.world.entity.monster.Monster;
@@ -15,6 +16,7 @@ public class CommonEvents {
     public void onPlayerHurt(LivingHurtEvent event) {
         if (!(event.getEntity() instanceof net.minecraft.world.entity.player.Player player)) return;
         if (player.level().isClientSide) return;
+        if (!ConfigMM.COMMON.ENABLE_SANITY.get()) return;
 
         float loss = Math.min(5f, 0.5f + event.getAmount() * 0.25f);
         player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity -> sanity.reduceSanity(loss));
@@ -24,6 +26,7 @@ public class CommonEvents {
     public void onLivingDeath(LivingDeathEvent event) {
         if (!(event.getSource().getEntity() instanceof net.minecraft.world.entity.player.Player player)) return;
         if (player.level().isClientSide) return;
+        if (!ConfigMM.COMMON.ENABLE_SANITY.get()) return;
 
         player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity -> {
             if (event.getEntity() instanceof Monster) {

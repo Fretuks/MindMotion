@@ -23,6 +23,7 @@ public class VentPacket {
         ctx.get().enqueueWork(() -> {
             ServerPlayer player = ctx.get().getSender();
             if (player == null) return;
+            if (!ConfigMM.COMMON.ENABLE_TEMPO.get()) return;
             int ventCost = ConfigMM.COMMON.VENT_COST.get();
             player.getCapability(PlayerCapabilityProvider.TEMPO).ifPresent(tempo -> {
                 if (tempo.getTempo() < ventCost) return;

@@ -80,18 +80,24 @@ public final class ConfigMM {
     }
 
     public static class Common {
+        public final ForgeConfigSpec.BooleanValue ENABLE_SANITY;
         public final ForgeConfigSpec.DoubleValue BASE_SANITY_REGEN_LIGHT;
         public final ForgeConfigSpec.DoubleValue BASE_SANITY_DECAY_DARK;
         public final ForgeConfigSpec.BooleanValue ENABLE_LOW_SANITY_SOUNDS;
         public final ForgeConfigSpec.BooleanValue ENABLE_SANITY_GAMEPLAY_EFFECTS;
         public final ForgeConfigSpec.DoubleValue SCRATCHING_CHANCE;
         public final ForgeConfigSpec.DoubleValue PANIC_CHANCE;
+        public final ForgeConfigSpec.BooleanValue ENABLE_TEMPO;
         public final ForgeConfigSpec.IntValue TEMPO_DECAY_DELAY;
         public final ForgeConfigSpec.IntValue VENT_COST;
         public final ForgeConfigSpec.IntValue TEMPO_PER_MANA_REGEN_PERCENT;
 
         Common(ForgeConfigSpec.Builder b) {
             b.push("sanity");
+
+            ENABLE_SANITY = b
+                    .comment("Enable the sanity and insanity systems, including HUD, shaders, sounds, commands, and gameplay effects.")
+                    .define("enableSanity", true);
 
             BASE_SANITY_REGEN_LIGHT = b
                     .comment("Sanity gained per tick in bright light.")
@@ -120,6 +126,10 @@ public final class ConfigMM {
                     .defineInRange("panicChance", 0.015, 0.0, 1.0);
 
             b.pop().push("tempo");
+
+            ENABLE_TEMPO = b
+                    .comment("Enable the tempo system, including HUD, combat gain, decay, Vent, and compatibility bonuses.")
+                    .define("enableTempo", true);
 
             TEMPO_DECAY_DELAY = b
                     .comment("Ticks without combat before tempo begins to decay.")

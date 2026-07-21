@@ -1,5 +1,6 @@
 package net.fretux.mindmotion.client;
 
+import net.fretux.mindmotion.ConfigMM;
 import net.fretux.mindmotion.network.ModMessages;
 import net.fretux.mindmotion.network.VentPacket;
 import net.minecraft.client.Minecraft;
@@ -13,12 +14,14 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onKeyInput(InputEvent.Key event) {
-        if (Keybinds.VENT_KEY.isDown()) {
+        boolean tempoEnabled = ConfigMM.COMMON.ENABLE_TEMPO.get() && ClientData.TEMPO_ENABLED;
+        boolean sanityEnabled = ConfigMM.COMMON.ENABLE_SANITY.get() && ClientData.SANITY_ENABLED;
+        if (tempoEnabled && Keybinds.VENT_KEY.isDown()) {
             ModMessages.CHANNEL.sendToServer(new VentPacket());
         }
         if (Keybinds.HUD_EDITOR_KEY.consumeClick()) {
             Minecraft minecraft = Minecraft.getInstance();
-            if (minecraft.screen == null) {
+            if (minecraft.screen == null && (tempoEnabled || sanityEnabled)) {
                 minecraft.setScreen(new HudEditorScreen(null));
             }
         }

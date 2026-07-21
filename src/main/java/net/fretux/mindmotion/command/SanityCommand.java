@@ -2,9 +2,11 @@ package net.fretux.mindmotion.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
+import net.fretux.mindmotion.ConfigMM;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -17,6 +19,10 @@ public class SanityCommand {
             .then(Commands.literal("set")
                 .then(Commands.argument("sanity", FloatArgumentType.floatArg(0))
                     .executes(ctx -> {
+                        if (!ConfigMM.COMMON.ENABLE_SANITY.get()) {
+                            ctx.getSource().sendFailure(Component.literal("Sanity system is disabled."));
+                            return 0;
+                        }
                         ServerPlayer player = ctx.getSource().getPlayerOrException();
                         float requestedSanity = FloatArgumentType.getFloat(ctx, "sanity");
                         final float[] appliedSanity = new float[] {0f};
@@ -30,7 +36,7 @@ public class SanityCommand {
                         });
 
                         ctx.getSource().sendSuccess(() ->
-                            net.minecraft.network.chat.Component.literal("Set sanity = " + appliedSanity[0]),
+                            Component.literal("Set sanity = " + appliedSanity[0]),
                             true
                         );
 
@@ -44,6 +50,10 @@ public class SanityCommand {
             .then(Commands.literal("set")
                 .then(Commands.argument("insanity", FloatArgumentType.floatArg(0))
                     .executes(ctx -> {
+                        if (!ConfigMM.COMMON.ENABLE_SANITY.get()) {
+                            ctx.getSource().sendFailure(Component.literal("Sanity system is disabled."));
+                            return 0;
+                        }
                         ServerPlayer player = ctx.getSource().getPlayerOrException();
                         float requestedInsanity = FloatArgumentType.getFloat(ctx, "insanity");
                         final float[] appliedInsanity = new float[] {0f};
@@ -57,7 +67,7 @@ public class SanityCommand {
                         });
 
                         ctx.getSource().sendSuccess(() ->
-                            net.minecraft.network.chat.Component.literal("Set insanity = " + appliedInsanity[0]),
+                            Component.literal("Set insanity = " + appliedInsanity[0]),
                             true
                         );
 

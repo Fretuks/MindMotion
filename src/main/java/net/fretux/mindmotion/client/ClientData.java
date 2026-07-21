@@ -9,4 +9,6 @@ public class ClientData {
     // NEW: synced from server
     public static float MAX_SANITY = 80f;
     public static int MAX_TEMPO = 120;
+    public static boolean SANITY_ENABLED = true;
+    public static boolean TEMPO_ENABLED = true;
 }
