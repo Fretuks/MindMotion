@@ -45,15 +45,17 @@ public class SanityShaderHandler {
 
     @SubscribeEvent
     public static void onRenderWorld(RenderLevelStageEvent event) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
         Minecraft mc = Minecraft.getInstance();
         if (ConfigMM.CLIENT.DISABLE_SHADERS.get() || !ConfigMM.COMMON.ENABLE_SANITY.get() || !ClientData.SANITY_ENABLED) {
-            if (mc.gameRenderer.currentEffect() != null)
+            PostChain current = mc.gameRenderer.currentEffect();
+            boolean oursLoaded = current != null && DESAT_EFFECT.toString().equals(current.getName());
+            if (oursLoaded)
                 mc.gameRenderer.shutdownEffect();
             return;
         }
         float flashMultiplier = ConfigMM.CLIENT.FLASH_STRENGTH_MULTIPLIER.get().floatValue();
         float desatMultiplier = ConfigMM.CLIENT.SANITY_DESAT_MULTIPLIER.get().floatValue();
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
         if (mc.player == null || mc.level == null) return;
         float sanity = ClientData.SANITY;
         float insanity = ClientData.INSANITY;
@@ -69,13 +71,18 @@ public class SanityShaderHandler {
         if (sanity <= 0f) target = 1f;
         currentStrength += (target - currentStrength) * 0.08f;
         if (currentStrength < 0.005f) {
-            if (mc.gameRenderer.currentEffect() != null) {
+            PostChain current = mc.gameRenderer.currentEffect();
+            boolean oursLoaded = current != null && DESAT_EFFECT.toString().equals(current.getName());
+            if (oursLoaded) {
                 mc.gameRenderer.shutdownEffect();
             }
             currentStrength = 0f;
             return;
         }
-        if (mc.gameRenderer.currentEffect() == null) {
+        PostChain current = mc.gameRenderer.currentEffect();
+        boolean oursLoaded = current != null && DESAT_EFFECT.toString().equals(current.getName());
+        if (current != null && !oursLoaded) return;
+        if (current == null) {
             try {
                 mc.gameRenderer.loadEffect(DESAT_EFFECT);
                 PostChain chain = mc.gameRenderer.currentEffect();
@@ -99,7 +106,8 @@ public class SanityShaderHandler {
             }
         }
         PostChain chain = mc.gameRenderer.currentEffect();
-        if (chain == null) return;
+        boolean oursLoadedAfterLoad = chain != null && DESAT_EFFECT.toString().equals(chain.getName());
+        if (!oursLoadedAfterLoad) return;
         try {
             for (PostPass pass : safeGetPasses(chain)) {
                 EffectInstance effect = pass.getEffect();
@@ -176,7 +184,9 @@ public class SanityShaderHandler {
         Minecraft mc = Minecraft.getInstance();
         currentStrength = 0f;
         mc.execute(() -> {
-            if (mc.gameRenderer.currentEffect() != null) {
+            PostChain current = mc.gameRenderer.currentEffect();
+            boolean oursLoaded = current != null && DESAT_EFFECT.toString().equals(current.getName());
+            if (oursLoaded) {
                 mc.gameRenderer.shutdownEffect();
             }
         });
