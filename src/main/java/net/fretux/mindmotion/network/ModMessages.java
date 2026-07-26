@@ -9,7 +9,7 @@ import net.fretux.mindmotion.AscendMindMotion;
 
 public class ModMessages {
 
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "5";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             ResourceLocation.fromNamespaceAndPath(AscendMindMotion.MODID, "main"),
             () -> PROTOCOL_VERSION,

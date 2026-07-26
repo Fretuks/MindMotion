@@ -33,6 +33,9 @@ public final class ConfigMM {
         public final ForgeConfigSpec.IntValue TEMPO_BAR_Y_OFFSET;
         public final ForgeConfigSpec.IntValue SANITY_BAR_X_OFFSET;
         public final ForgeConfigSpec.IntValue SANITY_BAR_Y_OFFSET;
+        public final ForgeConfigSpec.BooleanValue ENABLE_MADNESS_BAR;
+        public final ForgeConfigSpec.IntValue MADNESS_BAR_X_OFFSET;
+        public final ForgeConfigSpec.IntValue MADNESS_BAR_Y_OFFSET;
 
         Client(ForgeConfigSpec.Builder b) {
             b.push("visual");
@@ -74,6 +77,18 @@ public final class ConfigMM {
             SANITY_BAR_Y_OFFSET = b
                     .comment("Vertical offset for the sanity bar relative to its default position.")
                     .defineInRange("sanityBarYOffset", 0, -300, 300);
+
+            ENABLE_MADNESS_BAR = b
+                    .comment("Show the top-center Madness danger bar while Madness is above zero.")
+                    .define("enableMadnessBar", true);
+
+            MADNESS_BAR_X_OFFSET = b
+                    .comment("Horizontal offset for the Madness bar relative to the centered default position.")
+                    .defineInRange("madnessBarXOffset", 0, -300, 300);
+
+            MADNESS_BAR_Y_OFFSET = b
+                    .comment("Vertical offset for the Madness bar relative to the top-center default position.")
+                    .defineInRange("madnessBarYOffset", 0, -300, 300);
 
             b.pop();
         }

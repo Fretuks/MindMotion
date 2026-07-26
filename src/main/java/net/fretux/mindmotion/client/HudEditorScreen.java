@@ -21,6 +21,9 @@ public class HudEditorScreen extends Screen {
     private static final int DEFAULT_OFFSET = 0;
     private static final int BASE_TEMPO_X = 8;
     private static final int BASE_Y_OFFSET = 48;
+    private static final int MADNESS_BAR_WIDTH = 182;
+    private static final int MADNESS_BAR_HEIGHT = 7;
+    private static final int BASE_MADNESS_Y = 13;
 
     private final Screen previous;
 
@@ -30,15 +33,20 @@ public class HudEditorScreen extends Screen {
     private int tempoOffsetY;
     private int sanityOffsetX;
     private int sanityOffsetY;
+    private int madnessOffsetX;
+    private int madnessOffsetY;
 
     private boolean draggingTempo;
     private boolean draggingSanity;
+    private boolean draggingMadness;
     private double dragStartX;
     private double dragStartY;
     private int dragStartTempoX;
     private int dragStartTempoY;
     private int dragStartSanityX;
     private int dragStartSanityY;
+    private int dragStartMadnessX;
+    private int dragStartMadnessY;
 
     private IntSlider barWidthSlider;
     private IntSlider barHeightSlider;
@@ -46,6 +54,8 @@ public class HudEditorScreen extends Screen {
     private IntSlider tempoYSlider;
     private IntSlider sanityXSlider;
     private IntSlider sanityYSlider;
+    private IntSlider madnessXSlider;
+    private IntSlider madnessYSlider;
 
     public HudEditorScreen(Screen previous) {
         super(Component.translatable("screen.mindmotion.hud_editor.title"));
@@ -56,6 +66,8 @@ public class HudEditorScreen extends Screen {
         this.tempoOffsetY = ConfigMM.CLIENT.TEMPO_BAR_Y_OFFSET.get();
         this.sanityOffsetX = ConfigMM.CLIENT.SANITY_BAR_X_OFFSET.get();
         this.sanityOffsetY = ConfigMM.CLIENT.SANITY_BAR_Y_OFFSET.get();
+        this.madnessOffsetX = ConfigMM.CLIENT.MADNESS_BAR_X_OFFSET.get();
+        this.madnessOffsetY = ConfigMM.CLIENT.MADNESS_BAR_Y_OFFSET.get();
     }
 
     @Override
@@ -141,6 +153,22 @@ public class HudEditorScreen extends Screen {
                     sanityOffsetY,
                     value -> setSanityOffsetY(value, false)
             ));
+            y += step;
+        }
+
+        if (isMadnessEnabled()) {
+            madnessXSlider = addRenderableWidget(new IntSlider(
+                    leftX, y, sliderWidth, 20,
+                    "screen.mindmotion.hud_editor.madness_x",
+                    MIN_OFFSET, MAX_OFFSET, madnessOffsetX,
+                    value -> setMadnessOffsetX(value, false)
+            ));
+            madnessYSlider = addRenderableWidget(new IntSlider(
+                    rightX, y, sliderWidth, 20,
+                    "screen.mindmotion.hud_editor.madness_y",
+                    MIN_OFFSET, MAX_OFFSET, madnessOffsetY,
+                    value -> setMadnessOffsetY(value, false)
+            ));
         }
 
         int buttonY = this.height - 28;
@@ -193,6 +221,15 @@ public class HudEditorScreen extends Screen {
                 dragStartSanityY = sanityOffsetY;
                 return true;
             }
+            BarPosition madnessBar = getMadnessBarPosition();
+            if (isMadnessEnabled() && isMouseOver(mouseX, mouseY, madnessBar)) {
+                draggingMadness = true;
+                dragStartX = mouseX;
+                dragStartY = mouseY;
+                dragStartMadnessX = madnessOffsetX;
+                dragStartMadnessY = madnessOffsetY;
+                return true;
+            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -214,6 +251,13 @@ public class HudEditorScreen extends Screen {
                 setSanityOffsetY(newY, true);
                 return true;
             }
+            if (draggingMadness) {
+                int newX = clamp(dragStartMadnessX + (int) Math.round(mouseX - dragStartX), MIN_OFFSET, MAX_OFFSET);
+                int newY = clamp(dragStartMadnessY + (int) Math.round(mouseY - dragStartY), MIN_OFFSET, MAX_OFFSET);
+                setMadnessOffsetX(newX, true);
+                setMadnessOffsetY(newY, true);
+                return true;
+            }
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
@@ -223,6 +267,7 @@ public class HudEditorScreen extends Screen {
         if (button == 0) {
             draggingTempo = false;
             draggingSanity = false;
+            draggingMadness = false;
         }
         return super.mouseReleased(mouseX, mouseY, button);
     }
@@ -237,12 +282,13 @@ public class HudEditorScreen extends Screen {
     private void renderPreview(GuiGraphics gui) {
         BarPosition tempoBar = getTempoBarPosition();
         BarPosition sanityBar = getSanityBarPosition();
+        BarPosition madnessBar = getMadnessBarPosition();
         if (isTempoEnabled()) {
             drawRoundedBar(gui, tempoBar, 0xFF33AFFF, (int) (barWidth * 0.75f));
             gui.drawString(this.font, Component.literal("Tempo"), tempoBar.x, tempoBar.y - 12, 0x66CCFF, false);
         }
         if (isSanityEnabled()) {
-            drawRoundedBar(gui, sanityBar, 0xFFFFFFFF, (int) (barWidth * 0.6f));
+            drawRoundedBar(gui, sanityBar, 0xFFE8E8E8, (int) (barWidth * 0.6f));
             int sanityLabelWidth = this.font.width("Sanity");
             gui.drawString(
                     this.font,
@@ -252,6 +298,11 @@ public class HudEditorScreen extends Screen {
                     0xFFFFFF,
                     false
             );
+        }
+        if (isMadnessEnabled()) {
+            drawBossStyleBar(gui, madnessBar, 0.72f);
+            gui.drawCenteredString(this.font, Component.literal("Madness"),
+                    madnessBar.x + madnessBar.width / 2, madnessBar.y - 11, 0xFFFFFF55);
         }
     }
 
@@ -273,6 +324,15 @@ public class HudEditorScreen extends Screen {
                 baseY + sanityOffsetY,
                 barWidth,
                 barHeight
+        );
+    }
+
+    private BarPosition getMadnessBarPosition() {
+        return new BarPosition(
+                (this.width - MADNESS_BAR_WIDTH) / 2 + madnessOffsetX,
+                BASE_MADNESS_Y + madnessOffsetY,
+                MADNESS_BAR_WIDTH,
+                MADNESS_BAR_HEIGHT
         );
     }
 
@@ -324,6 +384,22 @@ public class HudEditorScreen extends Screen {
         }
     }
 
+    private void setMadnessOffsetX(int value, boolean updateSlider) {
+        madnessOffsetX = clamp(value, MIN_OFFSET, MAX_OFFSET);
+        ConfigMM.CLIENT.MADNESS_BAR_X_OFFSET.set(madnessOffsetX);
+        if (updateSlider && madnessXSlider != null) {
+            madnessXSlider.setIntValue(madnessOffsetX);
+        }
+    }
+
+    private void setMadnessOffsetY(int value, boolean updateSlider) {
+        madnessOffsetY = clamp(value, MIN_OFFSET, MAX_OFFSET);
+        ConfigMM.CLIENT.MADNESS_BAR_Y_OFFSET.set(madnessOffsetY);
+        if (updateSlider && madnessYSlider != null) {
+            madnessYSlider.setIntValue(madnessOffsetY);
+        }
+    }
+
     private void resetDefaults() {
         setBarWidth(DEFAULT_BAR_WIDTH, true);
         setBarHeight(DEFAULT_BAR_HEIGHT, true);
@@ -331,6 +407,8 @@ public class HudEditorScreen extends Screen {
         setTempoOffsetY(DEFAULT_OFFSET, true);
         setSanityOffsetX(DEFAULT_OFFSET, true);
         setSanityOffsetY(DEFAULT_OFFSET, true);
+        setMadnessOffsetX(DEFAULT_OFFSET, true);
+        setMadnessOffsetY(DEFAULT_OFFSET, true);
     }
 
     private void saveConfig() {
@@ -345,6 +423,10 @@ public class HudEditorScreen extends Screen {
         return ConfigMM.COMMON.ENABLE_SANITY.get() && ClientData.SANITY_ENABLED;
     }
 
+    private static boolean isMadnessEnabled() {
+        return isSanityEnabled() && ConfigMM.CLIENT.ENABLE_MADNESS_BAR.get();
+    }
+
     private static int clamp(int value, int min, int max) {
         return Math.min(Math.max(value, min), max);
     }
@@ -355,6 +437,31 @@ public class HudEditorScreen extends Screen {
         int top = color;
         int bottom = (color & 0x00FFFFFF) | 0xFF000000;
         drawRoundedRect(gui, pos.x, pos.y, fillWidth, pos.height, top, bottom);
+        if (fillWidth > 2) {
+            gui.fill(pos.x + 1, pos.y, pos.x + fillWidth - 1, pos.y + 1, lightenColor(color, 0.18f));
+        }
+    }
+
+    private void drawBossStyleBar(GuiGraphics gui, BarPosition pos, float progress) {
+        gui.fill(pos.x, pos.y, pos.x + pos.width, pos.y + pos.height, 0xFF000000);
+        gui.fill(pos.x + 1, pos.y + 1, pos.x + pos.width - 1, pos.y + pos.height - 1, 0xFF4A4000);
+        int fillWidth = Math.round((pos.width - 2) * progress);
+        int fillColor = mixColor(0xFFAD8D2C, 0xFFFFF4B0, progress);
+        gui.fillGradient(pos.x + 1, pos.y + 1, pos.x + 1 + fillWidth, pos.y + pos.height - 1,
+                lightenColor(fillColor, 0.16f), fillColor);
+    }
+
+    private static int mixColor(int from, int to, float amount) {
+        float t = Math.max(0f, Math.min(1f, amount));
+        int a = Math.round(((from >>> 24) & 0xFF) + (((to >>> 24) & 0xFF) - ((from >>> 24) & 0xFF)) * t);
+        int r = Math.round(((from >>> 16) & 0xFF) + (((to >>> 16) & 0xFF) - ((from >>> 16) & 0xFF)) * t);
+        int g = Math.round(((from >>> 8) & 0xFF) + (((to >>> 8) & 0xFF) - ((from >>> 8) & 0xFF)) * t);
+        int b = Math.round((from & 0xFF) + ((to & 0xFF) - (from & 0xFF)) * t);
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    private static int lightenColor(int color, float amount) {
+        return mixColor(color, (color & 0xFF000000) | 0x00FFFFFF, amount);
     }
 
     private void drawRoundedRect(GuiGraphics gui, int x, int y, int width, int height, int color) {

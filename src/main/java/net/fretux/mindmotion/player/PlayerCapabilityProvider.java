@@ -44,6 +44,13 @@ public class PlayerCapabilityProvider {
             tag.putFloat("BonusMaxSanity", instance.getBonusMaxSanity());
             tag.putFloat("Sanity", instance.getSanity());
             tag.putFloat("Insanity", instance.getInsanity());
+            tag.putFloat("BaseMaxMadness", instance.getBaseMaxMadness());
+            tag.putFloat("BonusMaxMadness", instance.getBonusMaxMadness());
+            tag.putFloat("BonusMadnessDecayPerTick", instance.getBonusMadnessDecayPerTick());
+            tag.putFloat("Madness", instance.getMadness());
+            tag.putInt("MadnessDecayDelayTicks", instance.getMadnessDecayDelayTicks());
+            tag.putInt("MadnessStunTicks", instance.getMadnessStunTicks());
+            tag.putBoolean("MadnessBacklashPending", instance.isMadnessBacklashPending());
             return tag;
         }
 
@@ -55,8 +62,29 @@ public class PlayerCapabilityProvider {
             if (nbt.contains("BonusMaxSanity")) {
                 instance.setBonusMaxSanity(nbt.getFloat("BonusMaxSanity"));
             }
+            if (nbt.contains("BaseMaxMadness")) {
+                instance.setBaseMaxMadness(nbt.getFloat("BaseMaxMadness"));
+            }
+            if (nbt.contains("BonusMaxMadness")) {
+                instance.setBonusMaxMadness(nbt.getFloat("BonusMaxMadness"));
+            }
+            if (nbt.contains("BonusMadnessDecayPerTick")) {
+                instance.setBonusMadnessDecayPerTick(nbt.getFloat("BonusMadnessDecayPerTick"));
+            }
             instance.setSanity(nbt.getFloat("Sanity"));
             instance.setInsanity(nbt.getFloat("Insanity"));
+            if (nbt.contains("Madness")) {
+                instance.setMadness(nbt.getFloat("Madness"));
+            }
+            if (nbt.contains("MadnessDecayDelayTicks")) {
+                instance.setMadnessDecayDelayTicks(nbt.getInt("MadnessDecayDelayTicks"));
+            }
+            if (nbt.contains("MadnessStunTicks")) {
+                instance.setMadnessStunTicks(nbt.getInt("MadnessStunTicks"));
+            }
+            if (nbt.contains("MadnessBacklashPending")) {
+                instance.setMadnessBacklashPending(nbt.getBoolean("MadnessBacklashPending"));
+            }
         }
     }
 

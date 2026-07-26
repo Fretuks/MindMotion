@@ -21,6 +21,8 @@ public final class AscendCompat {
                 player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(cap -> {
                     if (cap instanceof SanityCapability impl) {
                         impl.setBonusMaxSanity(sanityBonus);
+                        impl.setBonusMaxMadness(willpower * 0.5f);
+                        impl.setBonusMadnessDecayPerTick(willpower * 0.001f);
                     }
                 });
             }

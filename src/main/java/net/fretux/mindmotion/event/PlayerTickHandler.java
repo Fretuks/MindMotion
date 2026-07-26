@@ -1,6 +1,7 @@
 package net.fretux.mindmotion.event;
 
 import net.fretux.mindmotion.ConfigMM;
+import net.fretux.mindmotion.damage.ModDamageTypes;
 import net.fretux.mindmotion.network.ModMessages;
 import net.fretux.mindmotion.network.SyncStatsS2CPacket;
 import net.fretux.mindmotion.player.PlayerCapabilityProvider;
@@ -81,6 +82,11 @@ public class PlayerTickHandler {
         boolean sanityEnabled = ConfigMM.COMMON.ENABLE_SANITY.get();
         boolean tempoEnabled = ConfigMM.COMMON.ENABLE_TEMPO.get();
 
+        handleMadnessStun(player);
+        if (player instanceof ServerPlayer serverPlayer) {
+            CommonEvents.triggerPendingMadnessBacklash(serverPlayer);
+        }
+        handleMadnessDecay(player);
         if (sanityEnabled && sanityTick) handleSanityAndInsanity(player);
         if (tempoEnabled) {
             handleTempoTick(player, tick);
@@ -100,7 +106,11 @@ public class PlayerTickHandler {
                                             sanity.getMaxSanity(),
                                             tempo.getMaxTempo(),
                                             sanityEnabled,
-                                            tempoEnabled
+                                            tempoEnabled,
+                                            sanity.getMadness(),
+                                            sanity.getMaxMadness(),
+                                            sanity.getMadnessDecayPerTick(),
+                                            sanity.getMadnessDecayDelayTicks()
                                     ),
                                     serverPlayer.connection.connection,
                                     net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT
@@ -216,7 +226,7 @@ public class PlayerTickHandler {
                     int ticks = insanityDamageTicks.getOrDefault(id, 0) + SANITY_TICK_INTERVAL;
                     insanityDamageTicks.put(id, ticks);
                     float damage = 1.0f + (ticks / 100f);
-                    player.hurt(player.damageSources().magic(), damage);
+                    player.hurt(ModDamageTypes.terror(player.level()), damage);
                     player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
                     return;
                 }
@@ -285,6 +295,32 @@ public class PlayerTickHandler {
                 lowSanitySoundCooldown.put(id, cd);
             } else {
                 lowSanitySoundCooldown.remove(player.getUUID());
+            }
+        });
+    }
+
+    private static void handleMadnessStun(Player player) {
+        player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity -> {
+            int stunTicks = sanity.getMadnessStunTicks();
+            if (stunTicks <= 0) return;
+
+            sanity.setMadnessStunTicks(stunTicks - 1);
+            player.stopUsingItem();
+            player.setSprinting(false);
+            player.setDeltaMovement(0.0, 0.0, 0.0);
+            player.hurtMarked = true;
+        });
+    }
+
+    private static void handleMadnessDecay(Player player) {
+        player.getCapability(PlayerCapabilityProvider.SANITY).ifPresent(sanity -> {
+            int delayTicks = sanity.getMadnessDecayDelayTicks();
+            if (delayTicks > 0) {
+                sanity.setMadnessDecayDelayTicks(delayTicks - 1);
+                return;
+            }
+            if (sanity.getMadness() > 0f) {
+                sanity.setMadness(sanity.getMadness() - sanity.getMadnessDecayPerTick());
             }
         });
     }
@@ -483,14 +519,14 @@ public class PlayerTickHandler {
 
     private static void applyPanic(Player player) {
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 1));
-        player.hurt(player.damageSources().magic(), 1f);
+        player.hurt(ModDamageTypes.terror(player.level()), 1f);
         applyShiver(player);
         applyVertigo(player);
     }
 
     private static void applyScratching(Player player) {
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 30, 1));
-        player.hurt(player.damageSources().magic(), 2f);
+        player.hurt(ModDamageTypes.terror(player.level()), 2f);
         applyShiver(player);
         applyDread(player);
     }
