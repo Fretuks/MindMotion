@@ -284,25 +284,29 @@ public class HudEditorScreen extends Screen {
         BarPosition sanityBar = getSanityBarPosition();
         BarPosition madnessBar = getMadnessBarPosition();
         if (isTempoEnabled()) {
-            drawRoundedBar(gui, tempoBar, 0xFF33AFFF, (int) (barWidth * 0.75f));
-            gui.drawString(this.font, Component.literal("Tempo"), tempoBar.x, tempoBar.y - 12, 0x66CCFF, false);
+            BarRenderer.drawRoundedBar(gui, tempoBar.x, tempoBar.y, tempoBar.width, tempoBar.height,
+                    0.75f, HudTheme.TEMPO_TOP, HudTheme.TEMPO_BOTTOM);
+            gui.drawString(this.font, Component.literal("Tempo"), tempoBar.x, tempoBar.y - 12,
+                    HudTheme.TEMPO_LABEL, false);
         }
         if (isSanityEnabled()) {
-            drawRoundedBar(gui, sanityBar, 0xFFE8E8E8, (int) (barWidth * 0.6f));
+            BarRenderer.drawRoundedBar(gui, sanityBar.x, sanityBar.y, sanityBar.width, sanityBar.height,
+                    0.6f, HudTheme.SANITY_TOP, HudTheme.SANITY_BOTTOM);
             int sanityLabelWidth = this.font.width("Sanity");
             gui.drawString(
                     this.font,
                     Component.literal("Sanity"),
                     sanityBar.x + barWidth - sanityLabelWidth,
                     sanityBar.y - 12,
-                    0xFFFFFF,
+                    HudTheme.SANITY_LABEL,
                     false
             );
         }
         if (isMadnessEnabled()) {
-            drawBossStyleBar(gui, madnessBar, 0.72f);
+            BarRenderer.drawBossStyleBar(gui, madnessBar.x, madnessBar.y, madnessBar.width,
+                    madnessBar.height, 0.72f, System.nanoTime() / 1_000_000_000.0);
             gui.drawCenteredString(this.font, Component.literal("Madness"),
-                    madnessBar.x + madnessBar.width / 2, madnessBar.y - 11, 0xFFFFFF55);
+                    madnessBar.x + madnessBar.width / 2, madnessBar.y - 11, HudTheme.MADNESS_LABEL);
         }
     }
 
@@ -429,50 +433,6 @@ public class HudEditorScreen extends Screen {
 
     private static int clamp(int value, int min, int max) {
         return Math.min(Math.max(value, min), max);
-    }
-
-    private void drawRoundedBar(GuiGraphics gui, BarPosition pos, int color, int fillWidth) {
-        int bg = 0xCC000000;
-        drawRoundedRect(gui, pos.x, pos.y, pos.width, pos.height, bg);
-        int top = color;
-        int bottom = (color & 0x00FFFFFF) | 0xFF000000;
-        drawRoundedRect(gui, pos.x, pos.y, fillWidth, pos.height, top, bottom);
-        if (fillWidth > 2) {
-            gui.fill(pos.x + 1, pos.y, pos.x + fillWidth - 1, pos.y + 1, lightenColor(color, 0.18f));
-        }
-    }
-
-    private void drawBossStyleBar(GuiGraphics gui, BarPosition pos, float progress) {
-        gui.fill(pos.x, pos.y, pos.x + pos.width, pos.y + pos.height, 0xFF000000);
-        gui.fill(pos.x + 1, pos.y + 1, pos.x + pos.width - 1, pos.y + pos.height - 1, 0xFF4A4000);
-        int fillWidth = Math.round((pos.width - 2) * progress);
-        int fillColor = mixColor(0xFFAD8D2C, 0xFFFFF4B0, progress);
-        gui.fillGradient(pos.x + 1, pos.y + 1, pos.x + 1 + fillWidth, pos.y + pos.height - 1,
-                lightenColor(fillColor, 0.16f), fillColor);
-    }
-
-    private static int mixColor(int from, int to, float amount) {
-        float t = Math.max(0f, Math.min(1f, amount));
-        int a = Math.round(((from >>> 24) & 0xFF) + (((to >>> 24) & 0xFF) - ((from >>> 24) & 0xFF)) * t);
-        int r = Math.round(((from >>> 16) & 0xFF) + (((to >>> 16) & 0xFF) - ((from >>> 16) & 0xFF)) * t);
-        int g = Math.round(((from >>> 8) & 0xFF) + (((to >>> 8) & 0xFF) - ((from >>> 8) & 0xFF)) * t);
-        int b = Math.round((from & 0xFF) + ((to & 0xFF) - (from & 0xFF)) * t);
-        return (a << 24) | (r << 16) | (g << 8) | b;
-    }
-
-    private static int lightenColor(int color, float amount) {
-        return mixColor(color, (color & 0xFF000000) | 0x00FFFFFF, amount);
-    }
-
-    private void drawRoundedRect(GuiGraphics gui, int x, int y, int width, int height, int color) {
-        gui.fill(x + 1, y, x + width - 1, y + height, color);
-        gui.fill(x, y + 1, x + width, y + height - 1, color);
-        gui.fill(x + 1, y + 1, x + width - 1, y + height - 1, color);
-    }
-
-    private void drawRoundedRect(GuiGraphics gui, int x, int y, int width, int height, int topColor, int bottomColor) {
-        gui.fillGradient(x + 1, y, x + width - 1, y + height, topColor, bottomColor);
-        gui.fillGradient(x, y + 1, x + width, y + height - 1, topColor, bottomColor);
     }
 
     private static boolean isMouseOver(double mouseX, double mouseY, BarPosition pos) {

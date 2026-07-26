@@ -13,6 +13,7 @@ public class ClientData {
     private static float displayedInsanity = 0f;
     private static float displayedTempo = 0f;
     private static float displayedMadness = 0f;
+    private static float displayedInsanityBlend = 0f;
     private static float madnessRenderTarget = 0f;
     private static long lastMadnessRenderNanos = System.nanoTime();
 
@@ -46,6 +47,10 @@ public class ClientData {
         displayedInsanity += (INSANITY - displayedInsanity) * lerp;
         displayedTempo += (TEMPO - displayedTempo) * lerp;
         displayedMadness += (madnessRenderTarget - displayedMadness) * lerp;
+
+        float insanityTarget = SANITY <= 0f ? 1f : 0f;
+        float modeLerp = 1f - (float) Math.exp(-8f * elapsedSeconds);
+        displayedInsanityBlend += (insanityTarget - displayedInsanityBlend) * modeLerp;
     }
 
     public static float getDisplayedSanity() {
@@ -62,5 +67,9 @@ public class ClientData {
 
     public static float getDisplayedMadness() {
         return displayedMadness;
+    }
+
+    public static float getDisplayedInsanityBlend() {
+        return displayedInsanityBlend;
     }
 }
