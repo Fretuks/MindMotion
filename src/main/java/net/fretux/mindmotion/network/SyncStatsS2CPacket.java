@@ -94,20 +94,5 @@ public class SyncStatsS2CPacket {
             ClientData.MADNESS_DECAY_DELAY_TICKS = msg.madnessDecayDelayTicks;
         });
         ctx.get().setPacketHandled(true);
-
-        System.out.println(
-                "[Client] Sanity: " + msg.sanity +
-                        ", Insanity: " + msg.insanity +
-                        ", Tempo: " + msg.tempo +
-                        ", VentCD: " + msg.ventCooldown +
-                        ", MaxSanity: " + msg.maxSanity +
-                        ", MaxTempo: " + msg.maxTempo +
-                        ", SanityEnabled: " + msg.sanityEnabled +
-                        ", TempoEnabled: " + msg.tempoEnabled +
-                        ", Madness: " + msg.madness +
-                        ", MaxMadness: " + msg.maxMadness
-                        + ", MadnessDecayPerTick: " + msg.madnessDecayPerTick +
-                        ", MadnessDecayDelayTicks: " + msg.madnessDecayDelayTicks
-        );
     }
 }

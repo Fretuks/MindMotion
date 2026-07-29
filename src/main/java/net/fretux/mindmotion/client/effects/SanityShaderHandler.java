@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import net.fretux.mindmotion.ConfigMM;
 import net.fretux.mindmotion.client.ClientData;
 import net.fretux.mindmotion.client.shader.VentShaderHandler;
-import net.fretux.mindmotion.mixin.PostChainAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.PostPass;
@@ -28,6 +27,7 @@ public class SanityShaderHandler {
             ResourceLocation.fromNamespaceAndPath("mindmotion", "shaders/post/desaturate.json");
 
     private static float currentStrength = 0f;
+    private static boolean shaderErrorLogged = false;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Field PASSES_FIELD =
             ObfuscationReflectionHelper.findField(PostChain.class, "f_110009_");
@@ -37,9 +37,15 @@ public class SanityShaderHandler {
         try {
             return (List<PostPass>) PASSES_FIELD.get(chain);
         } catch (IllegalAccessException e) {
-            LOGGER.error("Failed to access PostChain.passes", e);
+            logShaderError("Failed to access sanity shader passes", e);
             return List.of();
         }
+    }
+
+    private static void logShaderError(String message, Throwable error) {
+        if (shaderErrorLogged) return;
+        shaderErrorLogged = true;
+        LOGGER.error(message, error);
     }
 
 
@@ -85,23 +91,8 @@ public class SanityShaderHandler {
         if (current == null) {
             try {
                 mc.gameRenderer.loadEffect(DESAT_EFFECT);
-                PostChain chain = mc.gameRenderer.currentEffect();
-                LOGGER.info("Loaded post chain = {}", chain != null);
-                if (chain != null) {
-                    try {
-                        for (PostPass pass : safeGetPasses(chain)) {
-                            EffectInstance fx = pass.getEffect();
-                            LOGGER.info("pass fx={}", fx != null ? fx.getName() : "null");
-                            if (fx != null) {
-                                LOGGER.info("  Desat uniform={}", fx.getUniform("Desat") != null);
-                            }
-                        }
-                    } catch (Throwable t) {
-                        LOGGER.error("Failed to read PostChain passes via reflection", t);
-                    }
-                }
             } catch (Exception e) {
-                LOGGER.error("Failed to read PostChain passes via reflection", e);
+                logShaderError("Failed to load sanity post-processing shader", e);
                 return;
             }
         }
@@ -174,7 +165,7 @@ public class SanityShaderHandler {
                 }
             }
         } catch (Exception e) {
-            LOGGER.info("Error loading post chain{}", e.getMessage());
+            logShaderError("Failed to update sanity shader uniforms", e);
         }
     }
 

@@ -84,8 +84,8 @@ void main() {
     float warp = intensity * 0.012 + PulseStrength * 0.006;
     shockUV += fromCenter * warp * dist;
 
-    // Chromatic aberration that ramps up with insanity
-    vec2 chromaOffset = fromCenter * (0.002 + intensity * 0.004);
+    // Chromatic aberration must disappear completely when no insanity effect is active.
+    vec2 chromaOffset = fromCenter * intensity * 0.006;
     float r = texture(DiffuseSampler, shockUV + chromaOffset).r;
     float g = texture(DiffuseSampler, shockUV).g;
     float b = texture(DiffuseSampler, shockUV - chromaOffset).b;
@@ -150,7 +150,8 @@ void main() {
 
     float contrast = 1.0 + intensity * 0.35;
     col.rgb = (col.rgb - 0.5) * contrast + 0.5;
-    col.rgb = filmicTone(col.rgb, 1.05 + intensity * 0.2);
+    vec3 toneMapped = filmicTone(col.rgb, 1.05 + intensity * 0.2);
+    col.rgb = mix(col.rgb, toneMapped, intensity);
     col.rgb = clamp(col.rgb, 0.0, 1.0);
     fragColor = vec4(col.rgb, 1.0);
 }
